@@ -28,5 +28,27 @@ for(i in 1:length(list)){
   df = rbind(df, temp2)
 }
 
+# データ数の確認
 200*length(list)*length(sheet) - nrow(df) #110000
+
+# 出現種の確認
+unique(df$species)
+df[df == "砂没"] <- NA
+df[df == "NoData"] <- NA
+df[df == "No Data"] <- NA
+df[df == "nodata"] <- NA
+df[df == "死イワフジツボ"] <- 0
+df[df == "座フクロフノリ"] <- "フクロフノリ"
+df[df == "座マツモ"] <- "マツモ"
+df[df == "ハバノリ"] <- "セイヨウハバノリ属spp"
+df[df == "ウズマキゴカイ→北海道ではスベカワウズマキゴカイ"] <- "スベカワウズマキゴカイ"
+
+head(df)
+df = df %>% mutate(height = as.numeric(str_sub(row, 2, 3)))
+
+df2 = df %>% group_by(year, plot, height, species) %>% count()
+
+
+# cog ---------------------------------------------------------------------
+df2$temp = 
 
