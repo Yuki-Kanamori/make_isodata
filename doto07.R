@@ -3,6 +3,7 @@ require(readxl)
 require(ggplot2)
 
 dir_input = "/Users/Yuki/Dropbox/isodata/doto/C/07/"
+dir_save = "/Users/Yuki/Dropbox/isodata/doto/distribution"
 
 list = list.files(dir_input)
 
@@ -70,8 +71,10 @@ g = ggplot(df4 %>% filter(species %in% choice), aes(x = year, y = mean_cog))
 p = geom_point()
 l = geom_line()
 f = facet_wrap(~ species, ncol = 3, scale = "free")
-g+p+l+f+theme_bw()+scale_y_reverse()
+fig = g+p+l+f+theme_bw()+scale_y_reverse()
 
+setwd(dir_save)
+ggsave(file = "cog.png", plot = fig, units = "in", width = 11.69, height = 8.27)
 
 
 
@@ -90,4 +93,7 @@ df6 = left_join(df2 %>% filter(species %in% choice) %>% select(-ko_temp), time, 
 g = ggplot(df6, aes(x = height, y = mean_n, group = time, color = time))
 l = geom_line(size = 1)
 f = facet_wrap(~ species, ncol = 3, scale = "free")
-g+l+f+theme_bw()+scale_colour_gradientn(colours = c("blue", "cyan", "green", "yellow", "orange", "red", "darkred"))
+fig = g+l+f+theme_bw()+scale_colour_gradientn(colours = c("blue", "cyan", "green", "yellow", "orange", "red", "darkred"))
+
+setwd(dir_save)
+ggsave(file = "3year_dist.png", plot = fig, units = "in", width = 11.69, height = 8.27)
