@@ -1,5 +1,6 @@
 require(tidyverse)
 require(readxl)
+require(ggplot2)
 
 dir_input = "/Users/Yuki/Dropbox/isodata/doto/C/07/"
 
@@ -42,6 +43,7 @@ df[df == "座フクロフノリ"] <- "フクロフノリ"
 df[df == "座マツモ"] <- "マツモ"
 df[df == "ハバノリ"] <- "セイヨウハバノリ属spp"
 df[df == "ウズマキゴカイ→北海道ではスベカワウズマキゴカイ"] <- "スベカワウズマキゴカイ"
+df$species = ifelse(df$species == "死イワフジツボ", 0, df$species)
 
 head(df)
 df = df %>% mutate(height = as.numeric(str_sub(row, 2, 3)))
@@ -50,5 +52,22 @@ df2 = df %>% group_by(year, plot, height, species) %>% count()
 
 
 # cog ---------------------------------------------------------------------
-df2$temp = 
+df2$ko_temp = df2$height*df2$n
+haha = df2 %>% group_by(year, plot, species) %>% summarize(haha = sum(n), na.rm = T)
 
+head(df2); head(haha)
+
+ko = df2 %>% group_by(year, plot, species) %>% summarize(ko = sum(ko_temp), na.rm = T)
+
+df3 = left_join(ko, haha, by = c("year", "plot", "species"))
+df3$cog = df3$ko/df3$haha
+
+df4 = df3 %>% group_by(year, species) %>% summarize(mean_cog = mean(cog))
+
+choice = c("イワフジツボ", "フクロフノリ", "ピリヒバ", "クロバギンナンソウ", "ネバリモ", "ツヤナシシオグサ", "マツモ", "アナアオサ", "ツヤナシシオグサ", "エンドウイトグサ")
+
+g = ggplot(df4 %>% filter(species %in% choice), aes(x = year, y = mean_cog))
+p = geom_point()
+l = geom_line()
+f = facet_wrap(~ species, ncol = 3, scale = "free")
+g+p+l+f+theme_bw()+scale_y_reverse()
