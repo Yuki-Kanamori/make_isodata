@@ -29,3 +29,31 @@ df = df %>% mutate(height = as.numeric(str_sub(row, 2, 3)))
 
 setwd(dir_save)
 save(df, file = "mobile.Rdata")
+
+df$n_count = as.numeric(df$count)
+df2 = df %>% group_by(year, plot, height, species) %>% summarize(n = sum(n_count)) %>% arrange(-n) %>% filter(n > 0)
+
+# cog ---------------------------------------------------------------------
+df2$ko_temp = df2$height*df2$n
+haha = df2 %>% group_by(year, plot, species) %>% summarize(haha = sum(n), na.rm = T)
+
+head(df2); head(haha)
+
+ko = df2 %>% group_by(year, plot, species) %>% summarize(ko = sum(ko_temp), na.rm = T)
+
+df3 = left_join(ko, haha, by = c("year", "plot", "species"))
+df3$cog = df3$ko/df3$haha
+
+df4 = df3 %>% group_by(year, species) %>% summarize(mean_cog = mean(cog))
+unique(df4$species)
+
+choice = c("クロタマキビ", "サラサシロガイ", "タマキビ", "シロガイ", "チヂミボラ", "ウチダヘソタマキビ")
+
+g = ggplot(df4 %>% filter(species %in% choice), aes(x = year, y = mean_cog))
+p = geom_point()
+l = geom_line()
+f = facet_wrap(~ species, ncol = 3, scale = "free")
+fig = g+p+l+f+theme_bw()+scale_y_reverse()
+
+setwd(dir_save)
+ggsave(file = "cog.png", plot = fig, units = "in", width = 11.69, height = 8.27)
