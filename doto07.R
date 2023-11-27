@@ -49,6 +49,9 @@ df$species = ifelse(df$species == "死イワフジツボ", 0, df$species)
 head(df)
 df = df %>% mutate(height = as.numeric(str_sub(row, 2, 3)))
 
+setwd(dir_save)
+save(df, file = "sessile.Rdata")
+
 df2 = df %>% group_by(year, plot, height, species) %>% count()
 
 
