@@ -71,3 +71,23 @@ p = geom_point()
 l = geom_line()
 f = facet_wrap(~ species, ncol = 3, scale = "free")
 g+p+l+f+theme_bw()+scale_y_reverse()
+
+
+
+
+# 垂直分布 --------------------------------------------------------------
+df5 = df2 %>% filter(species %in% choice) %>% select(-ko_temp) %>% group_by(year, species, height) %>% summarize(mean_n = mean(n))
+
+g = ggplot(df5, aes(x = height, y = mean_n, group = year, color = year))
+l = geom_line(size = 1)
+f = facet_wrap(~ species, ncol = 3, scale = "free")
+g+l+f+theme_bw()+scale_colour_gradientn(colours = c("blue", "cyan", "green", "yellow", "orange", "red", "darkred"))
+
+
+time = data.frame(year = 2002:2025, time = rep(1:8, each = 3))
+df6 = left_join(df2 %>% filter(species %in% choice) %>% select(-ko_temp), time, by = "year") %>% group_by(time, species, height) %>% summarize(mean_n =  mean(n))
+
+g = ggplot(df6, aes(x = height, y = mean_n, group = time, color = time))
+l = geom_line(size = 1)
+f = facet_wrap(~ species, ncol = 3, scale = "free")
+g+l+f+theme_bw()+scale_colour_gradientn(colours = c("blue", "cyan", "green", "yellow", "orange", "red", "darkred"))
