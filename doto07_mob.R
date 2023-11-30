@@ -56,4 +56,4 @@ f = facet_wrap(~ species, ncol = 3, scale = "free")
 fig = g+p+l+f+theme_bw()+scale_y_reverse()
 
 setwd(dir_save)
-ggsave(file = "cog.png", plot = fig, units = "in", width = 11.69, height = 8.27)
+ggsave(file = "cog_mob.png", plot = fig, units = "in", width = 11.69, height = 8.27)
