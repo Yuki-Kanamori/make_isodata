@@ -52,6 +52,7 @@ df = df %>% mutate(height = as.numeric(str_sub(row, 2, 3)))
 setwd(dir_save)
 save(df, file = "sessile.Rdata")
 
+head(df)
 df2 = df %>% group_by(year, plot, height, species) %>% count()
 
 
@@ -74,11 +75,12 @@ g = ggplot(df4 %>% filter(species %in% choice), aes(x = year, y = mean_cog))
 p = geom_point()
 l = geom_line()
 f = facet_wrap(~ species, ncol = 3, scale = "free")
+f = facet_wrap(~ species, ncol = 9, scale = "free")
 fig = g+p+l+f+theme_bw()+scale_y_reverse()
 
 setwd(dir_save)
 ggsave(file = "cog.png", plot = fig, units = "in", width = 11.69, height = 8.27)
-
+ggsave(file = "cog_wide.png", plot = fig, units = "in", width = 11.69, height = 8.27)
 
 
 # 垂直分布 --------------------------------------------------------------
