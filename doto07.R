@@ -75,7 +75,7 @@ g = ggplot(df4 %>% filter(species %in% choice), aes(x = year, y = mean_cog))
 p = geom_point()
 l = geom_line()
 f = facet_wrap(~ species, ncol = 3, scale = "free")
-f = facet_wrap(~ species, ncol = 9, scale = "free")
+f = facet_wrap(~ species, ncol = 5, scale = "free")
 fig = g+p+l+f+theme_bw()+scale_y_reverse()
 
 setwd(dir_save)
