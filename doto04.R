@@ -52,4 +52,4 @@ save(df, file = "sessile_2018to2023.Rdata")
 head(df)
 df2 = df %>% group_by(species) %>% count() %>% na.omit() %>% filter(species != 0) %>% arrange(-n)
 
-write.csv(df2, "species_list.csv", row.names = FALSE)
+write.csv(df2, "species_list.csv", fileEncoding = "CP932", row.names = FALSE)
