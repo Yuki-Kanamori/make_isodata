@@ -45,8 +45,8 @@ iwa = rbind(iwa_c, iwa_ext)
 # プロットごと・年ごとにイワフジツボの生物量を集計する
 iwa2 = iwa %>% group_by(year, plot) %>% count()
 
-# 
-# 2011年以降は調査範囲が広いので，
+# 2011年以降は調査範囲が広くなっているので，単純にイワフジツボが出現した点の数で比べることができない
+# イワフジツボが出現した点の数を調査点の数で割ることにする
 iwa2 = iwa2 %>% mutate(grid = ifelse(year < 2011, 200, 400))
 iwa2 = iwa2 %>% mutate(freq = n/grid)
 
