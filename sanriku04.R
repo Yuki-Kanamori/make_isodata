@@ -2,7 +2,7 @@ require(tidyverse)
 require(readxl)
 require(ggplot2)
 
-dir_input = "/Users/Yuki/Library/CloudStorage/Dropbox/isodata/sanriku/C/"
+dir_input = "/Users/Yuki/Library/CloudStorage/Dropbox/isodata/sanriku/07/C/"
 dir_save = "/Users/Yuki/Dropbox/isodata/sanriku"
 
 list = list.files(dir_input)
@@ -12,7 +12,7 @@ for(i in 1:length(list)){
   sheet = excel_sheets(paste0(dir_input, list[i]))
   
   temp2 = NULL
-  for(j in 1:length(sheet)){
+  for(j in 1:25){
     temp = read_excel(path = paste0(dir_input, list[i]),
                       range = "B4:K23",
                       sheet = sheet[j], 
@@ -32,7 +32,7 @@ for(i in 1:length(list)){
 
 
 # 延長 ----------------------------------------------------------------------
-dir_input = "/Users/Yuki/Library/CloudStorage/Dropbox/isodata/sanriku/Ext/"
+dir_input = "/Users/Yuki/Library/CloudStorage/Dropbox/isodata/sanriku/07/Ext/"
 dir_save = "/Users/Yuki/Dropbox/isodata/sanriku"
 
 list = list.files(dir_input)
@@ -42,7 +42,7 @@ for(i in 1:length(list)){
   sheet = excel_sheets(paste0(dir_input, list[i]))
   
   temp2 = NULL
-  for(j in 1:length(sheet)){
+  for(j in 1:25){
     temp = read_excel(path = paste0(dir_input, list[i]),
                       range = "B4:K23",
                       sheet = sheet[j], 
@@ -65,17 +65,23 @@ df = sanriku
 
 # 出現種の確認
 unique(df$species)
-df[df == "NA"] <- NA
-df[df == "NotSurveyed"] <- NA
-df[df == "910"] <- NA
-df[df == "notada"] <- NA
-df[df == "nodata"] <- NA
-df[df == "二次基質の上に付いているもの"] <- NA
-df[df == "[G1] 一次基質に付着している生物データ"] <- NA
-df[df == "NA"] <- NA
-df[df == "no data"] <- NA
-df[df == "スサビ"] <- "スサビノリ"
-df[df == "エゾカサネカンザシゴカイ"] <- "エゾカサネカンザシ"
+df[df == "NA"] = NA
+df[df == "NotSurveyed"] = NA
+df[df == "notada"] = NA
+df[df == "nodata"] = NA
+df[df == "NO DATA"] = NA
+df[df == "no data"] = NA
+df[df == "Nodata"] = NA
+df[df == "NODATA"] = NA
+df[df == "No Data"] = NA
+df[df == "NoData"] = NA
+df[df == "NO"] = NA
+df[df == "?"] = NA
+
+df[df == "スサビ"] = "スサビノリ"
+df[df == "エゾカサネカンザシゴカイ"] = "エゾカサネカンザシ"
+df[df == "ベニマダラ0"] = "ベニマダラ"
+df[df == "ツヤナシ"] = "ツヤナシシオグサ"
 
 head(df)
 df2 = df %>% group_by(species) %>% count() %>% na.omit() %>% filter(species != 0) %>% arrange(-n)
