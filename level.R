@@ -120,6 +120,7 @@ ggsave(filename = "trend_iwa.pdf", plot = fig, units = "in", width = 11.69, heig
 # 山田町（明神MJと荒神AG）におけるイワフジツボの生物量の動向を調べる -------------------------------------
 # 直近5年のデータを抽出する
 summary(trend_iwa)
+current = trend_iwa %>% filter(between(year, 2018, 2023))
 current = trend_iwa %>% filter(year >= 2019)
 summary(current)
 
