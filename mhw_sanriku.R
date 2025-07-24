@@ -123,3 +123,4 @@ th = theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8))
 g+p+l+f+labs+theme_bw()+th
 
 
+# 生物量と平均水温のデータにmhwsの強度*日数の値を付与する
