@@ -185,6 +185,11 @@ for(i in unique(matu$plot)){
   res_t_matu = rbind(res_t_matu, eff)
 }
 res_t_matu
+res_matu
+
+# res_matu2 = data.frame(m_env = mean(res_matu$eff), se_env = sd(res_matu$eff)/5,
+#                        m_cov = mean(res_t_matu$eff), se_cov = sd(res_t_matu$eff)/5)
+  
 
 
 # フノリ
@@ -345,5 +350,35 @@ for(i in unique(matu$plot)){
   res_t_hiji = rbind(res_t_hiji, eff)
 }
 res_t_hiji
+
+
+
+# 三陸プロット ------------------------------------------------------------------
+res_matu3 = cbind(res_matu, res_t_matu %>% select(-species) %>% rename(eff2 = eff))
+res_funo3 = cbind(res_funo, res_t_funo %>% select(-species) %>% rename(eff2 = eff))
+res_ten3 = cbind(res_ten, res_t_ten %>% select(-species) %>% rename(eff2 = eff))
+res_iga3 = cbind(res_iga, res_t_iga %>% select(-species) %>% rename(eff2 = eff))
+res_wak3 = cbind(res_wak, res_t_wak %>% select(-species) %>% rename(eff2 = eff))
+res_kel3 = cbind(res_kel, res_t_kel %>% select(-species) %>% rename(eff2 = eff))
+res_hiji3 = cbind(res_hiji, res_t_hiji %>% select(-species) %>% rename(eff2 = eff))
+
+sanp = rbind(res_matu3, res_funo3, res_ten3, res_iga3, res_wak3, res_kel3, res_hiji3)
+
+g = ggplot(sanp, aes(x = eff, y = eff2, color = species))
+p = geom_point()
+g+p+theme_bw(base_family = "HiraKakuPro-W3")
+
+sanp2 = sanp %>% group_by(species) %>% summarize(mean = mean(eff), mean2 = mean(eff2), se = sd(eff)/5, se2 = sd(eff2)/5)
+g = ggplot(sanp2, aes(x = mean, y = mean2))
+p = geom_point(size = 3)
+b = geom_errorbar(aes(ymin = mean2-se2, ymax = mean2+se2), width = 0.001) 
+b2 = geom_errorbarh(aes(xmin = mean-se, xmax = mean+se), height = 0.05)
+labs = labs(x = "資源量の傾向（増減）", y = "温暖化と海洋熱波からの影響")
+g+p+b+b2+labs+theme_bw(base_family = "HiraKakuPro-W3")+
+  geom_rect(xmin = 0.0, xmax = 1.2, ymin = -1.2, ymax = 0.0, fill = 'green', alpha = 0.1)+
+  geom_rect(xmin = -1.2, xmax = 0.0, ymin = -1.2, ymax = 0.0, fill = 'yellow', alpha = 0.1)+
+  geom_rect(xmin = -1.2, xmax = 0.0, ymin = 0.0, ymax = 1.2, fill = 'red', alpha = 0.1)+
+  geom_rect(xmin = 0.0, xmax = 1.2, ymin = 0.0, ymax = 1.3, fill = 'orange', alpha = 0.1)+
+  coord_cartesian(xlim = c(-0.01, 0.02), ylim = c(-1.2, 0.1))
 
 
