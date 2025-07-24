@@ -162,28 +162,68 @@ unique(df2$species) # "テングサ類" "フクロフノリ" "マツモ" "イガ
 # マツモ
 matu = df2 %>% filter(species == "マツモ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
 summary(matu)
+
+res_matu = NULL
+for(i in unique(matu$plot)){
+  temp2 = matu %>% filter(plot == i)
+  res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
+  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+  eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "マツモ")
+  res_matu = rbind(res_matu, eff)
+}
 res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = matu)
+res = lm(freq ~ m_sst2 + m_sst2_2 , data = matu)
 summary(res)
 
 
 # フノリ
 funo = df2 %>% filter(species == "フクロフノリ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+res_funo = NULL
+for(i in unique(matu$plot)){
+  temp2 = funo %>% filter(plot == i)
+  res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
+  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+  eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "フノリ")
+  res_funo = rbind(res_funo, eff)
+}
 res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = funo)
 summary(res)
 
 # コンブ類
 kel = df2 %>% filter(species == "コンブ類") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+res_kel = NULL
+for(i in unique(matu$plot)){
+  temp2 = kel %>% filter(plot == i)
+  res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
+  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+  eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "コンブ類")
+  res_kel = rbind(res_kel, eff)
+}
 res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = kel)
 summary(res)
 
 # ワカメ
 wak = df2 %>% filter(species == "ワカメ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+res_wak = NULL
+for(i in unique(matu$plot)){
+  temp2 = wak %>% filter(plot == i)
+  res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
+  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+  eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "ワカメ")
+  res_wak = rbind(res_wak, eff)
+}
 res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = wak)
 summary(res)
 
-# イガイ類
+# テングサ類
 ten = df2 %>% filter(species == "テングサ類") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+res_ten = NULL
+for(i in unique(matu$plot)){
+  temp2 = ten %>% filter(plot == i)
+  res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
+  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+  eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "テングサ類")
+  res_ten = rbind(res_ten, eff)
+}
 res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = ten)
 summary(res)
-
-# 
