@@ -374,11 +374,12 @@ p = geom_point(size = 3)
 b = geom_errorbar(aes(ymin = mean2-se2, ymax = mean2+se2), width = 0.001) 
 b2 = geom_errorbarh(aes(xmin = mean-se, xmax = mean+se), height = 0.05)
 labs = labs(x = "資源量の傾向（増減）", y = "温暖化と海洋熱波からの影響")
-g+p+b+b2+labs+theme_bw(base_family = "HiraKakuPro-W3")+
+fig = g+p+b+b2+labs+theme_bw(base_family = "HiraKakuPro-W3")+
   geom_rect(xmin = 0.0, xmax = 1.2, ymin = -1.2, ymax = 0.0, fill = 'green', alpha = 0.05)+
   geom_rect(xmin = -1.2, xmax = 0.0, ymin = -1.2, ymax = 0.0, fill = 'yellow', alpha = 0.05)+
   geom_rect(xmin = -1.2, xmax = 0.0, ymin = 0.0, ymax = 1.2, fill = 'red', alpha = 0.05)+
   geom_rect(xmin = 0.0, xmax = 1.2, ymin = 0.0, ymax = 1.3, fill = 'orange', alpha = 0.05)+
   coord_cartesian(xlim = c(-0.01, 0.02), ylim = c(-1.2, 0.1))
-
+setwd(dir = "/Users/Yuki/Dropbox/isodata/sanriku/")
+ggsave(filename = "sanrikuplot.png", plot = fig, units = "in", width = 11.69, height = 8.27)
 
