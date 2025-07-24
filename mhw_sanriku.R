@@ -251,3 +251,8 @@ for(i in unique(matu$plot)){
 }
 res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = hiji)
 summary(res)
+
+
+
+
+
