@@ -55,7 +55,7 @@ matu = matu %>% left_join(sp, by = "species")
 matu$species = NULL
 matu = matu %>% rename(species = species2)
 
-# プロットごと・年ごとにイワフジツボの生物量を集計する
+# プロットごと・年ごとに生物量を集計する
 matu2 = matu %>% group_by(year, plot, species) %>% count()
 
 temp = data.frame(plot = unique(matu2$plot), year = rep(2002:2023, each = 25))
