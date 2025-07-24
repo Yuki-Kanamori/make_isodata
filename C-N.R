@@ -78,16 +78,47 @@ matu3 = matu3 %>% mutate(freq = n/grid)
 # 生物量の年平均値を求める
 trend_matu = matu3 %>% group_by(year, species) %>% summarize(abundance = mean(freq), sd = sd(freq), se = sd(freq)/sqrt(length(.)))
 head(trend_matu)
-trend_matu = trend_matu %>% mutate(cov = abundance*100)
+trend = trend_matu %>% mutate(cov = abundance*100)
 
 # 作図
-g = ggplot(data = trend_matu, aes(x = year, y = cov))
+g = ggplot(data = trend, aes(x = year, y = cov))
 p = geom_point()
 l = geom_line()
-b = geom_errorbar(aes(ymin = cov-se, ymax = cov+se), width = 1)
+b = geom_errorbar(aes(ymin = cov-se, ymax = cov+se), width = 0.8)
 f = facet_wrap(~ species, scale = "free")
 labs = labs(x = "Year", y = "Abundance (Coverage, %)", title = "")
 fig = g+p+l+b+f+labs+theme_bw(base_family = "HiraKakuPro-W3")
 
 setwd(dir)
 ggsave(filename = "trend.png", plot = fig, units = "in", width = 11.69, height = 8.27)
+
+
+
+
+# 資源状況 ---------------------------------------------------------------------
+# 作図
+sp = unique(trend$species)
+for(i in 1:length(sp)){
+  df = trend %>% filter(species == sp[i])
+  
+  # 生物量の最小値と最大値を求める
+  min = min(df$cov)
+  (max = max(df$cov))
+  
+  # 低位・中位・高位の基準値を求める
+  (low = min+(max-min)*1/3)
+  (high = min+(max-min)*2/3)
+  
+  g = ggplot(data = df, aes(x = year, y = cov))
+  p = geom_point()
+  l = geom_line()
+  b = geom_errorbar(aes(ymin = cov-se, ymax = cov+se), width = 0.5)
+  fig = g+p+l+b+geom_hline(yintercept = c(low, high), linetype = "dashed", color = "red")+labs+theme_bw()
+  
+  setwd(dir)
+  ggsave(filename = paste("trend", sp[i], ".png"), plot = fig, units = "in", width = 11.69, height = 8.27)
+}
+
+
+
+
