@@ -36,12 +36,10 @@ c = read.csv("sanriku07C.csv", fileEncoding = "CP932")
 ext = read.csv("sanriku07C_Ext.csv", fileEncoding = "CP932")
 
 
-# 旧天然区と延長データからイワフジツボのデータを抽出する
-matu_c = c %>% filter(species == "イガイ" | species == "マツモ" | species == "座マツモ" | species == "ヒメテングサ" | species == "マコンブ" | species == "チガイソ" | species == "ホソメコンブ" | species == "ムラサキイガイ" | species == "ワカメ" | species == "フクロフノリ")
+# 旧天然区と延長データから水産有用種のデータを抽出する
+matu_c = c %>% filter(species == "イガイ" | species == "マツモ" | species == "座マツモ" | species == "ヒメテングサ" | species == "マコンブ" | species == "チガイソ" | species == "ホソメコンブ" | species == "ムラサキイガイ" | species == "ワカメ" | species == "フクロフノリ" | species == "ヒジキ")
 unique(matu_c$species)
-
-# イワフジツボだけが入っているかを確認する
-matu_ext = ext %>% filter(species == "イガイ" | species == "マツモ" | species == "座マツモ" | species == "ヒメテングサ" | species == "マコンブ" | species == "チガイソ" | species == "ホソメコンブ" | species == "ムラサキイガイ" | species == "ワカメ" | species == "フクロフノリ")
+matu_ext = ext %>% filter(species == "イガイ" | species == "マツモ" | species == "座マツモ" | species == "ヒメテングサ" | species == "マコンブ" | species == "チガイソ" | species == "ホソメコンブ" | species == "ムラサキイガイ" | species == "ワカメ" | species == "フクロフノリ" | species == "ヒジキ")
 
 # surveyという列を新しく作成し，旧天然区ならC・延長ならExtと入れる
 matu_c = matu_c %>% mutate(survey = "C")
@@ -52,7 +50,7 @@ matu = rbind(matu_c, matu_ext)
 
 # 種名を変更する
 sp = data.frame(species = unique(matu$species))
-sp$species2 = c("イガイ類", "マツモ", "テングサ類", "フクロフノリ", "イガイ類", "マツモ", "コンブ類", "ワカメ", "コンブ類", "コンブ類")
+sp$species2 = c("イガイ類", "マツモ", "テングサ類", "ヒジキ","フクロフノリ", "イガイ類", "マツモ", "コンブ類", "ワカメ", "コンブ類", "コンブ類")
 matu = matu %>% left_join(sp, by = "species") 
 matu$species = NULL
 matu = matu %>% rename(species = species2)
@@ -157,7 +155,7 @@ head(df2)
 
 
 # 各生物 --------------------------------------------
-unique(df2$species) # "テングサ類" "フクロフノリ" "マツモ" "イガイ類" "コンブ類" "ワカメ" 
+unique(df2$species) # "テングサ類" "フクロフノリ" "マツモ" "イガイ類" "ヒジキ" "コンブ類" "ワカメ" 
 
 # マツモ
 matu = df2 %>% filter(species == "マツモ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
@@ -226,4 +224,30 @@ for(i in unique(matu$plot)){
   res_ten = rbind(res_ten, eff)
 }
 res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = ten)
+summary(res)
+
+# イガイ類
+iga = df2 %>% filter(species == "イガイ類") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+res_iga = NULL
+for(i in unique(matu$plot)){
+  temp2 = iga %>% filter(plot == i)
+  res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
+  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+  eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "イガイ類")
+  res_iga = rbind(res_iga, eff)
+}
+res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = iga)
+summary(res)
+
+# ヒジキ
+hiji = df2 %>% filter(species == "ヒジキ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+res_hiji = NULL
+for(i in unique(matu$plot)){
+  temp2 = hiji %>% filter(plot == i)
+  res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
+  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+  eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "ヒジキ")
+  res_hiji = rbind(res_hiji, eff)
+}
+res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = hiji)
 summary(res)
