@@ -60,22 +60,35 @@ matu = matu %>% rename(species = species2)
 # プロットごと・年ごとにイワフジツボの生物量を集計する
 matu2 = matu %>% group_by(year, plot, species) %>% count()
 
+temp = data.frame(plot = unique(matu2$plot), year = rep(2002:2023, each = 25))
+
+matu3 = NULL
+for(i in unique(matu2$species)){
+  df_temp = matu2 %>% filter(species == i)
+  temp2 = left_join(temp, df_temp, by = c("year", "plot")) %>% mutate(species = paste(i))
+  matu3 = rbind(matu3, temp2)
+}
+matu3[is.na(matu3)] = 0
+
 # 2011年以降は調査範囲が広くなっているので，単純にイワフジツボが出現した点の数で比べることができない
 # イワフジツボが出現した点の数を調査点の数で割ることにする
 # 2010年まではMAX200点，2011年からはMAX400点
-matu2 = matu2 %>% mutate(grid = ifelse(year < 2011, 200, 400))
-matu2 = matu2 %>% mutate(freq = n/grid)
+matu3 = matu3 %>% mutate(grid = ifelse(year < 2011, 200, 400))
+matu3 = matu3 %>% mutate(freq = n/grid)
 
 # 生物量の年平均値を求める
 # trend_matu = matu2 %>% group_by(year, species) %>% summarize(abundance = mean(freq))
 # head(trend_matu)
 
-matu2 = matu2 %>% mutate(shore = str_sub(plot, 1, 2))
-head(matu2)
+matu3 = matu3 %>% mutate(shore = str_sub(plot, 1, 2))
+head(matu3)
+unique(matu3$plot)
+
+
 
 
 # sstと生物量データを統合する
-df = left_join(matu2, m_sst, by = c("year", "shore")) 
+df = left_join(matu3, m_sst, by = c("year", "shore")) 
 summary(df)
 
 
@@ -92,9 +105,9 @@ shore = c("MJ", "OR", "AG", "AK", "KG")
 
 res_mhw = NULL
 for(i in shore){
-  df = all_sst %>% filter(shore == i)
+  temp = all_sst %>% filter(shore == i)
   
-  res = detect_event(ts2clm(data = df,
+  res = detect_event(ts2clm(data = temp,
                             climatologyPeriod = c("1982-01-01", "2023-12-31")))
   cate = category(res, S = FALSE, name = "sanriku") %>% select(event_no, category, season)
   df_event = left_join(res[["event"]], cate, by = "event_no") %>% mutate(shore = paste(i))
@@ -124,3 +137,53 @@ g+p+l+f+labs+theme_bw()+th
 
 
 # 生物量と平均水温のデータにmhwsの強度*日数の値を付与する
+head(c); head(df)
+summary(c)
+c2 = c %>% group_by(year, shore) %>% summarize(sum = sum(value)) %>% mutate(year = as.numeric(year))
+summary(c2)
+temp = data.frame(shore = shore, year = rep(1985:2024, each = 5))
+c3 = left_join(temp, c2, by = c("year", "shore"))
+c3[is.na(c3)] = 0
+df = left_join(df, c3, by = c("year", "shore"))
+
+# 説明変数の標準化
+summary(df)
+m_sst2 = data.frame(m_sst2 = scale(df$m_sst))
+sum2 = data.frame(sum2 = scale(df$sum))
+
+df2 = cbind(df, m_sst2, sum2) %>% as.data.frame()
+head(df2)
+
+
+
+# 各生物 --------------------------------------------
+unique(df2$species) # "テングサ類" "フクロフノリ" "マツモ" "イガイ類" "コンブ類" "ワカメ" 
+
+# マツモ
+matu = df2 %>% filter(species == "マツモ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+summary(matu)
+res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = matu)
+summary(res)
+
+
+# フノリ
+funo = df2 %>% filter(species == "フクロフノリ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = funo)
+summary(res)
+
+# コンブ類
+kel = df2 %>% filter(species == "コンブ類") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = kel)
+summary(res)
+
+# ワカメ
+wak = df2 %>% filter(species == "ワカメ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = wak)
+summary(res)
+
+# イガイ類
+ten = df2 %>% filter(species == "テングサ類") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = ten)
+summary(res)
+
+# 
