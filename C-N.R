@@ -1,6 +1,7 @@
 # packages ----------------------------------------------------------------
 require(tidyverse)
 require(ggplot2)
+require(gridExtra)
 
 
 # directory -------------------------------------------------------------
@@ -121,4 +122,140 @@ for(i in 1:length(sp)){
 
 
 
+# 公開講座用のグラフ ---------------------------------------------------------------
+# わかめ
+df = trend %>% filter(species == "ワカメ")
 
+# 生物量の最小値と最大値を求める
+min = min(df$cov)
+(max = max(df$cov))
+
+# 低位・中位・高位の基準値を求める
+(low = min+(max-min)*1/3)
+(high = min+(max-min)*2/3)
+
+g = ggplot(data = df, aes(x = year, y = cov))
+p = geom_point()
+l = geom_line()
+b = geom_errorbar(aes(ymin = cov-se, ymax = cov+se), width = 0.5)
+labs = labs(x = "", y = "Abundance (Coverage, %)", title = "Undaria pinnatifida")
+fig1 = g+p+l+b+labs+geom_hline(yintercept = c(low, high), linetype = "dashed", color = "red")+labs+theme_bw()
+
+
+
+# コンブ類
+df = trend %>% filter(species == "コンブ類")
+
+# 生物量の最小値と最大値を求める
+min = min(df$cov)
+(max = max(df$cov))
+
+# 低位・中位・高位の基準値を求める
+(low = min+(max-min)*1/3)
+(high = min+(max-min)*2/3)
+
+g = ggplot(data = df, aes(x = year, y = cov))
+p = geom_point()
+l = geom_line()
+b = geom_errorbar(aes(ymin = cov-se, ymax = cov+se), width = 0.5)
+labs = labs(x = "", y = "", title = "Laminaria spp.")
+fig2 = g+p+l+b+labs+geom_hline(yintercept = c(low, high), linetype = "dashed", color = "red")+labs+theme_bw()
+
+
+# フノリ
+df = trend %>% filter(species == "フクロフノリ")
+
+# 生物量の最小値と最大値を求める
+min = min(df$cov)
+(max = max(df$cov))
+
+# 低位・中位・高位の基準値を求める
+(low = min+(max-min)*1/3)
+(high = min+(max-min)*2/3)
+
+g = ggplot(data = df, aes(x = year, y = cov))
+p = geom_point()
+l = geom_line()
+b = geom_errorbar(aes(ymin = cov-se, ymax = cov+se), width = 0.5)
+labs = labs(x = "", y = "", title = "Gloiopeltis fucata")
+fig3 = g+p+l+b+labs+geom_hline(yintercept = c(low, high), linetype = "dashed", color = "red")+labs+theme_bw()
+
+
+# マツモ
+df = trend %>% filter(species == "マツモ")
+
+# 生物量の最小値と最大値を求める
+min = min(df$cov)
+(max = max(df$cov))
+
+# 低位・中位・高位の基準値を求める
+(low = min+(max-min)*1/3)
+(high = min+(max-min)*2/3)
+
+g = ggplot(data = df, aes(x = year, y = cov))
+p = geom_point()
+l = geom_line()
+b = geom_errorbar(aes(ymin = cov-se, ymax = cov+se), width = 0.5)
+labs = labs(x = "Year", y = "", title = "Analipus japonicus")
+fig4 = g+p+l+b+labs+geom_hline(yintercept = c(low, high), linetype = "dashed", color = "red")+labs+theme_bw()
+
+
+# イガイ
+df = trend %>% filter(species == "イガイ類")
+
+# 生物量の最小値と最大値を求める
+min = min(df$cov)
+(max = max(df$cov))
+
+# 低位・中位・高位の基準値を求める
+(low = min+(max-min)*1/3)
+(high = min+(max-min)*2/3)
+
+g = ggplot(data = df, aes(x = year, y = cov))
+p = geom_point()
+l = geom_line()
+b = geom_errorbar(aes(ymin = cov-se, ymax = cov+se), width = 0.5)
+labs = labs(x = "Year", y = "Abundance (Coverage, %)", title = "Mytilus coruscus")
+fig5 = g+p+l+b+labs+geom_hline(yintercept = c(low, high), linetype = "dashed", color = "red")+labs+theme_bw()
+
+
+# ヒジキ
+df = trend %>% filter(species == "ヒジキ")
+
+# 生物量の最小値と最大値を求める
+min = min(df$cov)
+(max = max(df$cov))
+
+# 低位・中位・高位の基準値を求める
+(low = min+(max-min)*1/3)
+(high = min+(max-min)*2/3)
+
+g = ggplot(data = df, aes(x = year, y = cov))
+p = geom_point()
+l = geom_line()
+b = geom_errorbar(aes(ymin = cov-se, ymax = cov+se), width = 0.5)
+labs = labs(x = "Year", y = "", title = "Sargassum fusiforme")
+fig6 = g+p+l+b+labs+geom_hline(yintercept = c(low, high), linetype = "dashed", color = "red")+labs+theme_bw()
+
+
+
+# テングサ類
+df = trend %>% filter(species == "テングサ類")
+
+# 生物量の最小値と最大値を求める
+min = min(df$cov)
+(max = max(df$cov))
+
+# 低位・中位・高位の基準値を求める
+(low = min+(max-min)*1/3)
+(high = min+(max-min)*2/3)
+
+g = ggplot(data = df, aes(x = year, y = cov))
+p = geom_point()
+l = geom_line()
+b = geom_errorbar(aes(ymin = cov-se, ymax = cov+se), width = 0.5)
+labs = labs(x = "Year", y = "", title = "Gelidium divaricatum")
+fig7 = g+p+l+b+labs+geom_hline(yintercept = c(low, high), linetype = "dashed", color = "red")+labs+theme_bw()
+
+fig = gridExtra::grid.arrange(fig1, fig2, fig3, fig4, fig5, fig6, fig7, nrow = 2)
+ggsave(filename = "trend.pdf", plot = fig, units = "in", width = 11.69, height = 8.27)
