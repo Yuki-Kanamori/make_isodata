@@ -129,10 +129,22 @@ levels(fig_dic$cate)
 g = ggplot(fig_dic, aes(x = year, y = mean, group = cate))
 p = geom_point()
 l = geom_line()
-f = facet_wrap(~ cate, scales = "free", ncol = 2)
+f = facet_wrap(~ cate, scales = "free", ncol = 3)
 labs = labs(x = "Year", y = "")
 th = theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8))
-g+p+l+f+labs+theme_bw()+th
+fig = g+p+l+f+labs+theme_bw()+th
+setwd(dir = "/Users/Yuki/Dropbox/isodata/sanriku/")
+ggsave(filename = "mhw.pdf", plot = fig, units = "in", width = 11.69, height = 8.27)
+
+# 日数と強度の掛け算だけ
+g = ggplot(fig_dic %>% filter(cate == "intensity_cumulative") %>% mutate(year = as.numeric(year)), aes(x = year, y = mean, group = cate))
+p = geom_point()
+l = geom_line()
+labs = labs(x = "Year", y = "MHWs")
+th = theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8))
+fig = g+p+l+labs+theme_bw()+th+scale_x_continuous(breaks = seq(1980, 2024, 10))
+setwd(dir = "/Users/Yuki/Dropbox/isodata/sanriku/")
+ggsave(filename = "mhw_intensity_cumulative.pdf", plot = fig, units = "in", width = 11.69, height = 8.27)
 
 
 # 生物量と平均水温のデータにmhwsの強度*日数の値を付与する
@@ -380,8 +392,8 @@ b2 = geom_errorbarh(aes(xmin = mean2-se2, xmax = mean2+se2))
 labs = labs(x = "資源量の傾向（増減）", y = "温暖化と海洋熱波からの影響")
 fig = g+p+b+b2+labs+
   geom_rect(xmin = 0.0, xmax = 1.2, ymin = -1.5, ymax = 0.0, fill = 'orange', alpha = 0.05)+
-  geom_rect(xmin = -1.2, xmax = 0.0, ymin = -1.5, ymax = 0.0, fill = 'red', alpha = 0.05)+
-  geom_rect(xmin = -1.2, xmax = 0.0, ymin = 0.0, ymax = 1.3, fill = 'yellow', alpha = 0.05)+
+  geom_rect(xmin = -1.3, xmax = 0.0, ymin = -1.5, ymax = 0.0, fill = 'red', alpha = 0.05)+
+  geom_rect(xmin = -1.3, xmax = 0.0, ymin = 0.0, ymax = 1.3, fill = 'yellow', alpha = 0.05)+
   geom_rect(xmin = 0.0, xmax = 1.2, ymin = 0.0, ymax = 1.3, fill = 'green', alpha = 0.05)+
   coord_cartesian(xlim = c(-1.2, 0.1), ylim = c(-0.005, 0.02))+
   # geom_text_repel(label = sanp2$species, family = "HiraKakuPro-W3", size = 5)+
