@@ -2,6 +2,7 @@
 # packages ----------------------------------------------------------------
 require(tidyverse)
 require(heatwaveR)
+require(ggrepel)
 
 
 # directory ----------------------------------------------------------------
@@ -186,6 +187,7 @@ for(i in unique(matu$plot)){
 }
 res_t_matu
 res_matu
+summary(lm(freq*100 ~ year, data = t_matu))
 
 # res_matu2 = data.frame(m_env = mean(res_matu$eff), se_env = sd(res_matu$eff)/5,
 #                        m_cov = mean(res_t_matu$eff), se_cov = sd(res_t_matu$eff)/5)
@@ -215,7 +217,7 @@ for(i in unique(matu$plot)){
   res_t_funo = rbind(res_t_funo, eff)
 }
 res_t_funo
-
+summary(lm(freq*100 ~ year, data = t_funo))
 
 
 # コンブ類
@@ -242,7 +244,7 @@ for(i in unique(matu$plot)){
   res_t_kel = rbind(res_t_kel, eff)
 }
 res_t_kel
-
+summary(lm(freq*100 ~ year, data = t_kel))
 
 
 # ワカメ
@@ -269,7 +271,7 @@ for(i in unique(matu$plot)){
   res_t_wak = rbind(res_t_wak, eff)
 }
 res_t_wak
-
+summary(lm(freq*100 ~ year, data = t_wak))
 
 
 # テングサ類
@@ -296,7 +298,7 @@ for(i in unique(matu$plot)){
   res_t_ten = rbind(res_t_ten, eff)
 }
 res_t_ten
-
+summary(lm(freq*100 ~ year, data = t_ten))
 
 
 # イガイ類
@@ -323,7 +325,7 @@ for(i in unique(matu$plot)){
   res_t_iga = rbind(res_t_iga, eff)
 }
 res_t_iga
-
+summary(lm(freq*100 ~ year, data = t_iga))
 
 # ヒジキ
 hiji = df2 %>% filter(species == "ヒジキ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
@@ -350,6 +352,7 @@ for(i in unique(matu$plot)){
   res_t_hiji = rbind(res_t_hiji, eff)
 }
 res_t_hiji
+summary(lm(freq*100 ~ year, data = t_hiji))
 
 
 
@@ -369,17 +372,20 @@ p = geom_point()
 g+p+theme_bw(base_family = "HiraKakuPro-W3")
 
 sanp2 = sanp %>% group_by(species) %>% summarize(mean = mean(eff), mean2 = mean(eff2), se = sd(eff)/5, se2 = sd(eff2)/5)
-g = ggplot(sanp2, aes(x = mean, y = mean2))
+summary(sanp2)
+g = ggplot(sanp2, aes(x = mean2, y = mean))
 p = geom_point(size = 3)
-b = geom_errorbar(aes(ymin = mean2-se2, ymax = mean2+se2), width = 0.001) 
-b2 = geom_errorbarh(aes(xmin = mean-se, xmax = mean+se), height = 0.05)
+b = geom_errorbar(aes(ymin = mean-se, ymax = mean+se)) 
+b2 = geom_errorbarh(aes(xmin = mean2-se2, xmax = mean2+se2))
 labs = labs(x = "資源量の傾向（増減）", y = "温暖化と海洋熱波からの影響")
-fig = g+p+b+b2+labs+theme_bw(base_family = "HiraKakuPro-W3")+
-  geom_rect(xmin = 0.0, xmax = 1.2, ymin = -1.2, ymax = 0.0, fill = 'green', alpha = 0.05)+
-  geom_rect(xmin = -1.2, xmax = 0.0, ymin = -1.2, ymax = 0.0, fill = 'yellow', alpha = 0.05)+
-  geom_rect(xmin = -1.2, xmax = 0.0, ymin = 0.0, ymax = 1.2, fill = 'red', alpha = 0.05)+
-  geom_rect(xmin = 0.0, xmax = 1.2, ymin = 0.0, ymax = 1.3, fill = 'orange', alpha = 0.05)+
-  coord_cartesian(xlim = c(-0.01, 0.02), ylim = c(-1.2, 0.1))
+fig = g+p+b+b2+labs+
+  geom_rect(xmin = 0.0, xmax = 1.2, ymin = -1.5, ymax = 0.0, fill = 'orange', alpha = 0.05)+
+  geom_rect(xmin = -1.2, xmax = 0.0, ymin = -1.5, ymax = 0.0, fill = 'red', alpha = 0.05)+
+  geom_rect(xmin = -1.2, xmax = 0.0, ymin = 0.0, ymax = 1.3, fill = 'yellow', alpha = 0.05)+
+  geom_rect(xmin = 0.0, xmax = 1.2, ymin = 0.0, ymax = 1.3, fill = 'green', alpha = 0.05)+
+  coord_cartesian(xlim = c(-1.2, 0.1), ylim = c(-0.005, 0.02))+
+  # geom_text_repel(label = sanp2$species, family = "HiraKakuPro-W3", size = 5)+
+  theme_bw(base_family = "HiraKakuPro-W3")
 setwd(dir = "/Users/Yuki/Dropbox/isodata/sanriku/")
 ggsave(filename = "sanrikuplot.png", plot = fig, units = "in", width = 11.69, height = 8.27)
 
