@@ -252,7 +252,7 @@ df2 = cbind(df, m_sst2, sum2) %>% as.data.frame()
 head(df2)
 
 setwd(dir_iso)
-write.csv(df2, "df_boosting_sanriku.csv", fileEncoding = "CP932")
+write.csv(df2, "df_boosting_sanriku.csv", fileEncoding = "CP932", row.names = FALSE)
 
 
 # 各生物 --------------------------------------------
