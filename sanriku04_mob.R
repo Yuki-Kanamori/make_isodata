@@ -2,8 +2,8 @@ require(tidyverse)
 require(readxl)
 require(ggplot2)
 
-dir_input = "/Users/Yuki/Library/CloudStorage/Dropbox/isodata/sanriku/C/"
-dir_save = "/Users/Yuki/Dropbox/isodata/sanriku"
+dir_input = "/Users/Yuki/Library/CloudStorage/Dropbox/isodata/sanriku/07/C/"
+dir_save = "/Users/Yuki/Dropbox/isodata/sanriku/07/"
 
 list = list.files(dir_input)
 
@@ -12,7 +12,7 @@ for(i in 1:length(list)){
   sheet = excel_sheets(paste0(dir_input, list[i]))
   
   temp2 = NULL
-  for(j in 1:length(sheet)){
+  for(j in 1:25){
     temp = read_excel(path = paste0(dir_input, list[i]),
                       range = "AE103:AP181",
                       sheet = sheet[j], 
@@ -27,11 +27,12 @@ for(i in 1:length(list)){
 head(df)
 df = df %>% mutate(height = as.numeric(str_sub(row, 2, 3)))
 
-
+setwd(dir = dir_save)
+write.csv(df, "sanriku07C_mob.csv", fileEncoding = "CP932", row.names = FALSE)
 
 # 延長 ----------------------------------------------------------------------
-dir_input = "/Users/Yuki/Library/CloudStorage/Dropbox/isodata/sanriku/Ext/"
-dir_save = "/Users/Yuki/Dropbox/isodata/sanriku"
+dir_input = "/Users/Yuki/Library/CloudStorage/Dropbox/isodata/sanriku/07/Ext/"
+dir_save = "/Users/Yuki/Dropbox/isodata/sanriku/07"
 
 list = list.files(dir_input)
 
@@ -40,7 +41,7 @@ for(i in 1:length(list)){
   sheet = excel_sheets(paste0(dir_input, list[i]))
   
   temp2 = NULL
-  for(j in 1:length(sheet)){
+  for(j in 1:25){
     temp = read_excel(path = paste0(dir_input, list[i]),
                       range = "AE103:AP181",
                       sheet = sheet[j], 
@@ -55,6 +56,11 @@ for(i in 1:length(list)){
 head(df2)
 df2 = df2 %>% mutate(height = as.numeric(str_sub(row, 2, 3)))
 
+setwd(dir = dir_save)
+write.csv(df2, "sanriku07C_Ext_mob.csv", fileEncoding = "CP932", row.names = FALSE)
+
+
+# 統合 ----------------------------------------------------------------------
 df3 = rbind(df, df2)
 
 df3$n_count = as.numeric(df3$count)
@@ -62,4 +68,4 @@ summary(df3)
 df4 = df3 %>% na.omit() %>% group_by(species) %>% summarize(n = sum(n_count)) %>% arrange(-n) %>% filter(n > 0)
 
 setwd(dir_save)
-write.csv(df4, "mobile_list.csv", fileEncoding = "CP932", row.names = FALSE)
+write.csv(df4, "mobile07.csv", fileEncoding = "CP932", row.names = FALSE)
