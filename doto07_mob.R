@@ -29,6 +29,7 @@ df = df %>% mutate(height = as.numeric(str_sub(row, 2, 3)))
 
 setwd(dir_save)
 save(df, file = "doto07C_mob.Rdata")
+write.csv(df, "doto07C_mob.csv", fileEncoding = "CP932", row.names = FALSE)
 
 df$n_count = as.numeric(df$count)
 df2 = df %>% group_by(year, plot, height, species) %>% summarize(n = sum(n_count)) %>% arrange(-n) %>% filter(n > 0)

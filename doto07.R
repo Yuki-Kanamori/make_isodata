@@ -51,6 +51,7 @@ df = df %>% mutate(height = as.numeric(str_sub(row, 2, 3)))
 
 setwd(dir_save)
 save(df, file = "doto07C.Rdata")
+write.csv(df, "doto07C.csv", fileEncoding = "CP932", row.names = FALSE)
 
 head(df)
 df2 = df %>% group_by(year, plot, height, species) %>% count()
