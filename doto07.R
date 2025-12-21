@@ -50,7 +50,7 @@ head(df)
 df = df %>% mutate(height = as.numeric(str_sub(row, 2, 3)))
 
 setwd(dir_save)
-save(df, file = "sessile.Rdata")
+save(df, file = "sessile07.Rdata")
 
 head(df)
 df2 = df %>% group_by(year, plot, height, species) %>% count()
