@@ -39,7 +39,7 @@ df[df == "砂没"] <- NA
 df[df == "NoData"] <- NA
 df[df == "No Data"] <- NA
 df[df == "nodata"] <- NA
-df[df == "死イワフジツボ"] <- 0
+# df[df == "死イワフジツボ"] <- 0
 df[df == "座フクロフノリ"] <- "フクロフノリ"
 df[df == "座マツモ"] <- "マツモ"
 df[df == "ハバノリ"] <- "セイヨウハバノリ属spp"
