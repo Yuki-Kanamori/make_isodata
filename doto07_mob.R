@@ -28,7 +28,7 @@ head(df)
 df = df %>% mutate(height = as.numeric(str_sub(row, 2, 3)))
 
 setwd(dir_save)
-save(df, file = "mobile07.Rdata")
+save(df, file = "doto07C_mob.Rdata")
 
 df$n_count = as.numeric(df$count)
 df2 = df %>% group_by(year, plot, height, species) %>% summarize(n = sum(n_count)) %>% arrange(-n) %>% filter(n > 0)
