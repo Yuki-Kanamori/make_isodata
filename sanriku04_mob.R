@@ -55,6 +55,7 @@ for(i in 1:length(list)){
 
 head(df2)
 df2 = df2 %>% mutate(height = as.numeric(str_sub(row, 2, 3)))
+df2$count = ifelse(df2$count == "nodata", NA, df2$count)
 
 setwd(dir = dir_save)
 write.csv(df2, "sanriku07C_Ext_mob.csv", fileEncoding = "CP932", row.names = FALSE)
