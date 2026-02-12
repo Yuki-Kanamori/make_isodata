@@ -136,7 +136,7 @@ for (i in unique(all_sst$shore)) {
   # climatology（熱波/寒波共通で使う）
   clim <- ts2clm(
     data = temp_i,
-    climatologyPeriod = c("1982-01-01", "2023-12-31")
+    climatologyPeriod = c("1982-01-01", "1999-12-31")
   )
   
   # --- 熱波 ---
@@ -239,17 +239,18 @@ evt_wide <- evt_year %>%
 # できる列例：icumu_MHW, icumu_MCS
 evt_wide2 = evt_wide %>%
   mutate(year = as.integer(year)) %>%
-  filter(between(year, 2002, 2023))
+  filter(between(year, 2002, 2025))
 
 df2 <- left_join(df, evt_wide2, by = c("shore", "year"))
 
-# 説明変数の標準化
-summary(df)
-m_sst2 = data.frame(m_sst2 = scale(df$m_sst))
-sum2 = data.frame(sum2 = scale(df$sum))
 
-df2 = cbind(df, m_sst2, sum2) %>% as.data.frame()
-head(df2)
+# # 説明変数の標準化
+# summary(df2)
+# m_sst2 = data.frame(m_sst2 = scale(df$m_sst))
+# sum2 = data.frame(sum2 = scale(df$sum))
+# 
+# df2 = cbind(df, m_sst2, sum2) %>% as.data.frame()
+# head(df2)
 
 setwd(dir_iso)
 write.csv(df2, "df_boosting_sanriku.csv", fileEncoding = "CP932", row.names = FALSE)
