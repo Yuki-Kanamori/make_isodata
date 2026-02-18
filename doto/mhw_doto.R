@@ -188,3 +188,16 @@ target3 <- left_join(target2, evt_wide2, by = c("shore", "year"))
 
 setwd(dir_iso)
 write.csv(target3, "df_boosting_doto.csv", fileEncoding = "CP932", row.names = FALSE)
+
+
+
+# トレンド ---------------------------------------------------------------------
+fig_target = target3 %>% group_by(year, shore, species) %>% summarize(mean = mean(freq))
+
+g = ggplot(fig_target, aes(x = year, y = mean))
+p = geom_point()
+l = geom_line()
+f = facet_grid(species ~ shore)
+g+p+l+f+theme_bw(base_family = "HiraKakuPro-W3")
+
+
