@@ -302,3 +302,87 @@ for(sp in species_list){
 ## -------------------------
 print(plots[["フクロフノリ"]])
 print(plots[["クロバギンナンソウ"]])
+
+
+
+
+# -------------------------------------------------------------------------
+shap_importance_plots <- list()
+shap_dependence_plots <- list()
+
+for(sp in names(fits)){
+  
+  fit <- fits[[sp]]
+  
+  # scaled predictors
+  X_scaled <- as.matrix(fit$df_scaled[, pred_vars, drop=FALSE])
+  
+  # SHAP values
+  shap_vals <- predict(fit$model, X_scaled, predcontrib = TRUE)
+  shap_df <- as.data.frame(shap_vals)
+  
+  # remove BIAS column
+  shap_df <- shap_df[, colnames(shap_df) != "BIAS", drop=FALSE]
+  colnames(shap_df) <- pred_vars
+  
+  # -------------------------
+  # (i) importance plot
+  # -------------------------
+  
+  imp <- data.frame(
+    variable = pred_vars,
+    mean_abs_shap = sapply(pred_vars, function(v)
+      mean(abs(shap_df[[v]]), na.rm=TRUE)),
+    mean_shap = sapply(pred_vars, function(v)
+      mean(shap_df[[v]], na.rm=TRUE))
+  )
+  
+  p_imp <- ggplot(imp, aes(x=reorder(variable, mean_abs_shap),
+                           y=mean_abs_shap,
+                           fill=mean_shap)) +
+    geom_col() +
+    coord_flip() +
+    scale_fill_gradient2(low="blue", mid="white", high="red") +
+    labs(title=paste("SHAP importance -", sp),
+         x="Variable",
+         y="mean(|SHAP|)",
+         fill="mean SHAP") +
+    theme_bw(base_family = "HiraKakuPro-W3")
+  
+  shap_importance_plots[[sp]] <- p_imp
+  
+  # -------------------------
+  # (ii) dependence plot（1枚にまとめる：修正版）
+  # -------------------------
+  
+  df_list <- list()
+  
+  for(v in pred_vars){
+    df_list[[v]] <- data.frame(
+      variable = v,
+      x = fit$df_raw[[v]],
+      shap = shap_df[[v]]
+    )
+  }
+  
+  df_dep <- bind_rows(df_list)
+  
+  p_dep <- ggplot(df_dep, aes(x=x, y=shap)) +
+    geom_point(alpha=0.4) +
+    geom_smooth(method="loess", se=FALSE, color="red") +
+    facet_wrap(~variable, scales="free_x") +
+    labs(title=paste("SHAP dependence -", sp),
+         x="Predictor value",
+         y="SHAP value") +
+    theme_bw(base_family = "HiraKakuPro-W3")
+  
+  shap_dependence_plots[[sp]] <- p_dep
+}
+
+
+
+# 作図 ----------------------------------------------------------------------
+print(shap_importance_plots[["フクロフノリ"]])
+print(shap_importance_plots[["クロバギンナンソウ"]])
+print(shap_dependence_plots[["フクロフノリ"]])
+print(shap_dependence_plots[["クロバギンナンソウ"]])
