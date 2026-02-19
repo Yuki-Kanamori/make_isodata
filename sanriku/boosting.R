@@ -15,6 +15,7 @@ require(ggrepel)
 dir_iso = "/Users/Yuki/Dropbox/isodata/sanriku/07/"
 setwd(dir_iso)
 df2 = read.csv("df_boosting_sanriku2.csv", fileEncoding = "CP932")
+summary(df2)
 
 
 ## -------------------------
@@ -256,7 +257,7 @@ plot_sanriku_yearmean_cross <- function(df_year, title=NULL,
       color = "Year",
       title = title
     ) +
-    theme_bw()
+    theme_bw(base_family = "HiraKakuPro-W3")
 }
 
 ## -------------------------
@@ -303,7 +304,6 @@ for(sp in species_list){
 ## -------------------------
 ## 3) example
 ## -------------------------
-# print(plots[["テングサ類"]])
 print(plots[["テングサ類"]])
 print(plots[["フクロフノリ"]])
 print(plots[["マツモ"]])

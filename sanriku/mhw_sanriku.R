@@ -59,7 +59,7 @@ matu = matu %>% rename(species = species2)
 # プロットごと・年ごとに生物量を集計する
 matu2 = matu %>% group_by(year, plot, species) %>% count()
 
-temp = data.frame(plot = unique(matu2$plot), year = rep(2002:2023, each = 25))
+temp = data.frame(plot = unique(matu2$plot), year = rep(2002:2025, each = 25))
 
 matu3 = NULL
 for(i in unique(matu2$species)){
