@@ -247,12 +247,12 @@ plot_sanriku_yearmean_cross <- function(df_year, title=NULL,
     coord_cartesian(xlim = c(x_min, x_max), ylim = c(y_min, y_max)) +
     
     labs(
-      x = "Resource level (freq centered at species mean): annual mean ± SE",
-      y = "Environmental axis (total SHAP incl. interactions): annual mean ± SE",
+      x = "資源量（0が平均値）",
+      y = "環境の影響",
       color = "Year",
       title = title
     ) +
-    theme_bw()
+    theme_bw(base_family = "HiraKakuPro-W3")
 }
 
 ## -------------------------
@@ -303,6 +303,21 @@ for(sp in species_list){
 print(plots[["フクロフノリ"]])
 print(plots[["クロバギンナンソウ"]])
 
+ggsave(
+  filename = "sanriku_フクロフノリ.png",
+  plot = plots[["フクロフノリ"]],
+  width = 6,
+  height = 5,
+  dpi = 300
+)
+
+ggsave(
+  filename = "sanriku_クロバギンナンソウ.png",
+  plot = plots[["クロバギンナンソウ"]],
+  width = 6,
+  height = 5,
+  dpi = 300
+)
 
 
 
@@ -342,7 +357,7 @@ for(sp in names(fits)){
                            fill=mean_shap)) +
     geom_col() +
     coord_flip() +
-    scale_fill_gradient2(low="blue", mid="white", high="red") +
+    scale_fill_gradient2(low="gray60", mid="gray60", high="gray60") +
     labs(title=paste("SHAP importance -", sp),
          x="Variable",
          y="mean(|SHAP|)",
@@ -386,3 +401,53 @@ print(shap_importance_plots[["フクロフノリ"]])
 print(shap_importance_plots[["クロバギンナンソウ"]])
 print(shap_dependence_plots[["フクロフノリ"]])
 print(shap_dependence_plots[["クロバギンナンソウ"]])
+
+
+
+# 年ごとのshap ----------------------------------------------------------------
+shap_yearly <- list()
+
+for(sp in names(fits)){
+  
+  fit <- fits[[sp]]
+  
+  X_scaled <- as.matrix(fit$df_scaled[, pred_vars, drop=FALSE])
+  
+  shap_vals <- predict(fit$model, X_scaled, predcontrib = TRUE)
+  shap_df <- as.data.frame(shap_vals)
+  
+  shap_df <- shap_df[, colnames(shap_df) != "BIAS", drop=FALSE]
+  colnames(shap_df) <- pred_vars
+  
+  df_year <- fit$df_raw %>%
+    select(year) %>%
+    bind_cols(shap_df) %>%
+    pivot_longer(-year, names_to="variable", values_to="shap") %>%
+    group_by(year, variable) %>%
+    summarise(
+      importance = mean(abs(shap), na.rm=TRUE),
+      .groups="drop"
+    )
+  
+  shap_yearly[[sp]] <- df_year
+}
+
+fig = ggplot(shap_yearly[["フクロフノリ"]],
+       aes(x=year, y=importance, color=variable)) +
+  geom_line() +
+  geom_point() +
+  theme_bw(base_family="HiraKakuPro-W3") +
+  labs(y="重要度",
+       x = "Year",
+       title="")
+ggsave(filename = "trend_shap_funo.png", plot = fig, units = "in", width = 11.69, height = 8.27)
+
+fig = ggplot(shap_yearly[["クロバギンナンソウ"]],
+       aes(x=year, y=importance, color=variable)) +
+  geom_line() +
+  geom_point() +
+  theme_bw(base_family="HiraKakuPro-W3") +
+  labs(y="重要度",
+       x = "Year",
+       title="")
+ggsave(filename = "trend_shap_kuro.png", plot = fig, units = "in", width = 11.69, height = 8.27)

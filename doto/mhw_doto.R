@@ -200,13 +200,45 @@ write.csv(target3, "df_boosting_doto.csv", fileEncoding = "CP932", row.names = F
 
 
 # トレンド ---------------------------------------------------------------------
-fig_target = target3 %>% group_by(year, shore, species) %>% summarize(mean = mean(freq))
+fig_target = target3 %>% group_by(year, species) %>% summarize(mean = mean(freq), sd = sd(freq))
 
 g = ggplot(fig_target, aes(x = year, y = mean))
 p = geom_point()
 l = geom_line()
-f = facet_grid(species ~ shore)
+f = facet_wrap(~ species, ncol = 2)
 g+p+l+f+theme_bw(base_family = "HiraKakuPro-W3")
+
+hline_df <- fig_target %>%
+  group_by(species) %>%
+  summarise(
+    min = min(mean, na.rm = TRUE),
+    max = max(mean, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    low  = min + (max - min) * 1/3,
+    high = min + (max - min) * 2/3
+  ) %>%
+  pivot_longer(
+    cols = c(low, high),
+    names_to = "level",
+    values_to = "yintercept"
+  )
+
+g = ggplot(fig_target, aes(x = year, y = mean))
+p = geom_point()
+l = geom_line()
+f = facet_wrap(~ species, ncol = 2)
+h <- geom_hline(
+  data = hline_df,
+  aes(yintercept = yintercept),
+  linetype = "dashed",
+  color = "red",
+  linewidth = 0.4,
+  inherit.aes = FALSE
+)
+fig = g+p+l+h+f+theme_bw(base_family = "HiraKakuPro-W3")
+ggsave(filename = "trend_akkeshi.png", plot = fig, units = "in", width = 11.69, height = 8.27)
 
 
 
