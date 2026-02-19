@@ -48,6 +48,13 @@ target[is.na(target)] = 0
 target2 = left_join(target, m_sst, by = c("year", "shore"))
 
 
+## mob
+mob = read.csv("/Users/Yuki/Library/CloudStorage/Dropbox/isodata/doto/distribution/doto07C_mob.csv", fileEncoding = "CP932")
+sp_list = data.frame(species = unique(mob$species))
+write.csv(sp_list, "sp_list_mob_diet.csv", fileEncoding = "CP932", row.names = FALSE)
+
+
+
 # mhws --------------------------------------------------------------------
 sst_ap = sst_ap %>% mutate(temp = paste(year, month, day, sep = "-")) %>% mutate(t = as.Date(temp)) %>% select(-temp) %>% rename(temp = SST)
 sst_mb = sst_mb %>% mutate(temp = paste(year, month, day, sep = "-")) %>% mutate(t = as.Date(temp)) %>% select(-temp) %>% rename(temp = SST)
@@ -207,14 +214,14 @@ g+p+l+f+theme_bw(base_family = "HiraKakuPro-W3")
 target3$freq_beta <- (target3$freq * (nrow(target3) - 1) + 0.5) / nrow(target3)
 
 target3_scaled <- target3
-vars <- c("m_sst","icumu_MCS","icumu_MHW")
+vars <- c("year", "m_sst","icumu_MCS","icumu_MHW")
 target3_scaled[vars] <- scale(target3_scaled[vars])
 
 funo = target3 %>% filter(species == "フクロフノリ")
 kuro = target3 %>% filter(species == "クロバギンナンソウ")
 
 glmm_funo <- glmmTMB(
-  freq_beta ~ m_sst + I(m_sst^2) + icumu_MCS + icumu_MHW +
+  freq_beta ~ year + m_sst + I(m_sst^2) + icumu_MCS + icumu_MHW +
     (1 | shore),
   family = beta_family(),
   data = funo
@@ -223,7 +230,7 @@ summary(glmm_funo)
 
 
 glmm_kuro <- glmmTMB(
-  freq_beta ~ m_sst + I(m_sst^2) + icumu_MCS + icumu_MHW +
+  freq_beta ~ year + m_sst + I(m_sst^2) + icumu_MCS + icumu_MHW +
     (1 | shore),
   family = beta_family(),
   data = kuro
