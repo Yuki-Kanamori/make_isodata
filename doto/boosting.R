@@ -321,6 +321,134 @@ ggsave(
 
 
 
+
+# 平均値の図   ------------------------------------------------------------------
+## -------------------------
+## 日本語フォント設定
+## -------------------------
+jp_family <- "HiraKakuPro-W3"
+
+# フォントが無い環境の保険
+if (!jp_family %in% systemfonts::system_fonts()$family) {
+  jp_family <- "Hiragino Kaku Gothic ProN"
+}
+
+showtext_auto(enable = TRUE)
+
+## -------------------------
+## 種平均データ作成
+## -------------------------
+df_species <- bind_rows(lapply(names(sanriku_yearmean), function(sp){
+  df <- sanriku_yearmean[[sp]]
+  
+  df %>%
+    summarise(
+      species = sp,
+      mean2 = mean(mean2, na.rm=TRUE),
+      sd2   = sd(mean2, na.rm=TRUE),
+      n2    = sum(is.finite(mean2)),
+      se2   = ifelse(n2 > 1, sd2 / sqrt(n2), 0),
+      
+      mean  = mean(mean, na.rm=TRUE),
+      sd1   = sd(mean, na.rm=TRUE),
+      n1    = sum(is.finite(mean)),
+      se    = ifelse(n1 > 1, sd1 / sqrt(n1), 0)
+    )
+}))
+
+## -------------------------
+## 対象2種を指定
+## -------------------------
+target_species <- c("フクロフノリ", "クロバギンナンソウ")
+
+df2sp <- df_species %>%
+  filter(species %in% target_species) %>%
+  filter(is.finite(mean2), is.finite(mean))
+
+## -------------------------
+## 軸範囲計算
+## -------------------------
+x_rng <- range(df2sp$mean2 + c(-1,1)*df2sp$se2, na.rm=TRUE)
+y_rng <- range(df2sp$mean  + c(-1,1)*df2sp$se,  na.rm=TRUE)
+
+x_pad <- diff(x_rng) * 0.3
+if(!is.finite(x_pad) || x_pad==0) x_pad <- 0.05
+
+y_pad <- diff(y_rng) * 0.3
+if(!is.finite(y_pad) || y_pad==0) y_pad <- 0.05
+
+x_min <- x_rng[1]-x_pad
+x_max <- x_rng[2]+x_pad
+y_min <- y_rng[1]-y_pad
+y_max <- y_rng[2]+y_pad
+
+## -------------------------
+## 作図
+## -------------------------
+p_species_mean <- ggplot(df2sp, aes(x = mean2, y = mean)) +
+  
+  # 背景四象限
+  geom_rect(xmin = 0,     xmax = x_max, ymin = y_min, ymax = 0,     fill = "orange", alpha = 0.08) +
+  geom_rect(xmin = x_min, xmax = 0,     ymin = y_min, ymax = 0,     fill = "red",    alpha = 0.08) +
+  geom_rect(xmin = x_min, xmax = 0,     ymin = 0,     ymax = y_max, fill = "yellow", alpha = 0.08) +
+  geom_rect(xmin = 0,     xmax = x_max, ymin = 0,     ymax = y_max, fill = "green",  alpha = 0.08) +
+  
+  geom_hline(yintercept = 0, linewidth = 0.3) +
+  geom_vline(xintercept = 0, linewidth = 0.3) +
+  
+  # 十字バー
+  geom_segment(aes(x = mean2, xend = mean2,
+                   y = mean - se, yend = mean + se),
+               linewidth = 0.8, color = "black") +
+  
+  geom_segment(aes(x = mean2 - se2, xend = mean2 + se2,
+                   y = mean, yend = mean),
+               linewidth = 0.8, color = "black") +
+  
+  # 点
+  geom_point(size = 4, color = "black") +
+  
+  # 種名ラベル
+  ggrepel::geom_text_repel(
+    aes(label = species),
+    family = jp_family,
+    size = 4,
+    segment.color = NA,
+    max.overlaps = Inf,
+    na.rm = TRUE
+  ) +
+  
+  coord_cartesian(xlim = c(x_min, x_max), ylim = c(y_min, y_max)) +
+  
+  labs(
+    x = "資源量（0が平均値）",
+    y = "環境の影響",
+    title = "Sanriku plot（種平均 ± SE）"
+  ) +
+  
+  theme_bw(base_family = jp_family)
+
+## 表示
+print(p_species_mean)
+
+
+## -------------------------
+## 保存（豆腐になりにくい）
+## -------------------------
+ggsave(
+  filename = "sanriku_species_mean_2sp.png",
+  plot = p_species_mean,
+  width = 7,
+  height = 5,
+  dpi = 300,
+  device = ragg::agg_png
+)
+
+
+
+
+base_family = "HiraKakuPro-W3"
+
 # -------------------------------------------------------------------------
 shap_importance_plots <- list()
 shap_dependence_plots <- list()

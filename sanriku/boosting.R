@@ -12,6 +12,11 @@ require(xgboost)
 require(Matrix)
 require(ggrepel)
 
+dir_iso = "/Users/Yuki/Dropbox/isodata/sanriku/07/"
+setwd(dir_iso)
+df2 = read.csv("df_boosting_sanriku2.csv", fileEncoding = "CP932")
+
+
 ## -------------------------
 ## 0) settings
 ## -------------------------
