@@ -3,6 +3,7 @@
 require(tidyverse)
 require(heatwaveR)
 require(ggrepel)
+library(glmmTMB)
 
 
 # directory ----------------------------------------------------------------
@@ -201,3 +202,30 @@ f = facet_grid(species ~ shore)
 g+p+l+f+theme_bw(base_family = "HiraKakuPro-W3")
 
 
+
+# glm ---------------------------------------------------------------------
+target3$freq_beta <- (target3$freq * (nrow(target3) - 1) + 0.5) / nrow(target3)
+
+target3_scaled <- target3
+vars <- c("m_sst","icumu_MCS","icumu_MHW")
+target3_scaled[vars] <- scale(target3_scaled[vars])
+
+funo = target3 %>% filter(species == "フクロフノリ")
+kuro = target3 %>% filter(species == "クロバギンナンソウ")
+
+glmm_funo <- glmmTMB(
+  freq_beta ~ m_sst + I(m_sst^2) + icumu_MCS + icumu_MHW +
+    (1 | shore),
+  family = beta_family(),
+  data = funo
+)
+summary(glmm_funo)
+
+
+glmm_kuro <- glmmTMB(
+  freq_beta ~ m_sst + I(m_sst^2) + icumu_MCS + icumu_MHW +
+    (1 | shore),
+  family = beta_family(),
+  data = kuro
+)
+summary(glmm_kuro)
