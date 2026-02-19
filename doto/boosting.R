@@ -5,6 +5,7 @@ require(ggrepel)
 
 
 # directory ---------------------------------------------------------------
+dir_iso = "/Users/Yuki/Library/CloudStorage/Dropbox/isodata/doto/distribution/"
 setwd(dir_iso)
 
 
@@ -328,12 +329,6 @@ ggsave(
 ## -------------------------
 jp_family <- "HiraKakuPro-W3"
 
-# フォントが無い環境の保険
-if (!jp_family %in% systemfonts::system_fonts()$family) {
-  jp_family <- "Hiragino Kaku Gothic ProN"
-}
-
-showtext_auto(enable = TRUE)
 
 ## -------------------------
 ## 種平均データ作成
