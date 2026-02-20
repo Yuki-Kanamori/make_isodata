@@ -681,6 +681,8 @@ print(p_imp_2sp)
 #        title="")
 # ggsave(filename = "trend_shap_kuro.png", plot = fig, units = "in", width = 11.69, height = 8.27)
 
+
+
 # 年ごとのshap（強さ＋方向） --------------------------------------------
 shap_yearly <- list()
 
@@ -747,113 +749,146 @@ fig <- ggplot(shap_yearly[["クロバギンナンソウ"]],
 ggsave(filename = "trend_shap_kuro.png", plot = fig, units = "in", width = 11.69, height = 8.27)
 
 
-
-
-# 分解 ----------------------------------------------------------------------
-## =========================================================
-## Δ分解：Δfreq ≈ ΣΔSHAP を検証
-## =========================================================
-
+### 積み上げグラフにする
 sp <- "フクロフノリ"
 sp <- "クロバギンナンソウ"
 
-fit <- fits[[sp]]
+df_plot <- shap_yearly[[sp]] %>%
+  select(year, variable, direction)
 
-# -------------------------
-# 1) 年別 mean SHAP
-# -------------------------
+p_stack_level <- ggplot(df_plot,
+                        aes(x = year,
+                            y = direction,
+                            fill = variable)) +
+  geom_col() +
+  geom_hline(yintercept = 0,
+             color = "black",
+             linewidth = 0.5) +
+  theme_bw(base_family = "HiraKakuPro-W3") +
+  labs(
+    y = "平均SHAP（環境寄与の分解）",
+    x = "Year",
+    title = paste("環境寄与のレベル分解 -", sp)
+  )
 
-X_scaled <- as.matrix(fit$df_scaled[, pred_vars, drop=FALSE])
-shap_vals <- predict(fit$model, X_scaled, predcontrib = TRUE)
-shap_df <- as.data.frame(shap_vals)
-
-shap_df <- shap_df[, colnames(shap_df) != "BIAS", drop=FALSE]
-colnames(shap_df) <- pred_vars
-
-shap_year <- fit$df_raw %>%
-  select(year) %>%
-  bind_cols(shap_df) %>%
-  pivot_longer(-year, names_to="variable", values_to="shap") %>%
-  group_by(year, variable) %>%
-  summarise(mean_shap = mean(shap, na.rm=TRUE),
-            .groups="drop")
-
-# -------------------------
-# 2) Δmean SHAP
-# -------------------------
-
-shap_delta <- shap_year %>%
-  arrange(variable, year) %>%
-  group_by(variable) %>%
-  mutate(delta_shap = mean_shap - lag(mean_shap)) %>%
-  ungroup()
-
-# -------------------------
-# 3) Δfreq
-# -------------------------
-
-freq_year <- sanriku_yearmean[[sp]] %>%
-  select(year, mean2) %>%
-  arrange(year) %>%
-  mutate(delta_freq = mean2 - lag(mean2))
-
-# -------------------------
-# 4) 結合
-# -------------------------
-
-analysis_df <- left_join(shap_delta, freq_year, by="year")
-
-# 各年の ΣΔSHAP
-delta_sum <- analysis_df %>%
-  group_by(year) %>%
-  summarise(sum_delta_shap = sum(delta_shap, na.rm=TRUE),
-            delta_freq = first(delta_freq),
-            .groups="drop")
-
-print(delta_sum)
-
-# -------------------------
-# 5) 検証プロット
-# -------------------------
-
-library(ggplot2)
-
-p_check <- ggplot(delta_sum,
-                  aes(x=delta_freq,
-                      y=sum_delta_shap)) +
-  geom_point(size=3) +
-  geom_smooth(method="lm", se=FALSE) +
-  theme_bw(base_family="HiraKakuPro-W3") +
-  labs(x="Δfreq（実測）",
-       y="ΣΔSHAP（モデル分解）",
-       title=paste("Δ分解検証 -", sp))
-
-print(p_check)
-
-# 相関確認
-cor(delta_sum$delta_freq,
-    delta_sum$sum_delta_shap,
-    use="complete.obs")
-
-p_stack <- ggplot(shap_delta,
-                  aes(x=year,
-                      y=delta_shap,
-                      fill=variable)) +
-  geom_col() +geom_hline(yintercept = 0,
-                         color = "black",
-                         linewidth = 0.5) +
-  theme_bw(base_family="HiraKakuPro-W3") +
-  labs(y="ΔSHAP",
-       x="Year",
-       title=paste("年変動の要因分解 -", sp))
-
-print(p_stack)
+print(p_stack_level)
 
 ggsave(
-  filename = "delta_SHAP_stack_kuro.png",
-  plot = p_stack,
-  width = 11,
-  height = 8,
-  units = "in",
-  dpi = 300
-)
+    filename = "SHAP_stack_kuro.png",
+    plot = p_stack_level,
+    width = 11,
+    height = 8,
+    units = "in",
+    dpi = 300
+  )
+
+
+
+# # 分解 ----------------------------------------------------------------------
+# ## =========================================================
+# ## Δ分解：Δfreq ≈ ΣΔSHAP を検証
+# ## =========================================================
+# 
+# sp <- "フクロフノリ"
+# sp <- "クロバギンナンソウ"
+# 
+# fit <- fits[[sp]]
+# 
+# # -------------------------
+# # 1) 年別 mean SHAP
+# # -------------------------
+# 
+# X_scaled <- as.matrix(fit$df_scaled[, pred_vars, drop=FALSE])
+# shap_vals <- predict(fit$model, X_scaled, predcontrib = TRUE)
+# shap_df <- as.data.frame(shap_vals)
+# 
+# shap_df <- shap_df[, colnames(shap_df) != "BIAS", drop=FALSE]
+# colnames(shap_df) <- pred_vars
+# 
+# shap_year <- fit$df_raw %>%
+#   select(year) %>%
+#   bind_cols(shap_df) %>%
+#   pivot_longer(-year, names_to="variable", values_to="shap") %>%
+#   group_by(year, variable) %>%
+#   summarise(mean_shap = mean(shap, na.rm=TRUE),
+#             .groups="drop")
+# 
+# # -------------------------
+# # 2) Δmean SHAP
+# # -------------------------
+# 
+# shap_delta <- shap_year %>%
+#   arrange(variable, year) %>%
+#   group_by(variable) %>%
+#   mutate(delta_shap = mean_shap - lag(mean_shap)) %>%
+#   ungroup()
+# 
+# # -------------------------
+# # 3) Δfreq
+# # -------------------------
+# 
+# freq_year <- sanriku_yearmean[[sp]] %>%
+#   select(year, mean2) %>%
+#   arrange(year) %>%
+#   mutate(delta_freq = mean2 - lag(mean2))
+# 
+# # -------------------------
+# # 4) 結合
+# # -------------------------
+# 
+# analysis_df <- left_join(shap_delta, freq_year, by="year")
+# 
+# # 各年の ΣΔSHAP
+# delta_sum <- analysis_df %>%
+#   group_by(year) %>%
+#   summarise(sum_delta_shap = sum(delta_shap, na.rm=TRUE),
+#             delta_freq = first(delta_freq),
+#             .groups="drop")
+# 
+# print(delta_sum)
+# 
+# # -------------------------
+# # 5) 検証プロット
+# # -------------------------
+# 
+# library(ggplot2)
+# 
+# p_check <- ggplot(delta_sum,
+#                   aes(x=delta_freq,
+#                       y=sum_delta_shap)) +
+#   geom_point(size=3) +
+#   geom_smooth(method="lm", se=FALSE) +
+#   theme_bw(base_family="HiraKakuPro-W3") +
+#   labs(x="Δfreq（実測）",
+#        y="ΣΔSHAP（モデル分解）",
+#        title=paste("Δ分解検証 -", sp))
+# 
+# print(p_check)
+# 
+# # 相関確認
+# cor(delta_sum$delta_freq,
+#     delta_sum$sum_delta_shap,
+#     use="complete.obs")
+# 
+# p_stack <- ggplot(shap_delta,
+#                   aes(x=year,
+#                       y=delta_shap,
+#                       fill=variable)) +
+#   geom_col() +geom_hline(yintercept = 0,
+#                          color = "black",
+#                          linewidth = 0.5) +
+#   theme_bw(base_family="HiraKakuPro-W3") +
+#   labs(y="ΔSHAP",
+#        x="Year",
+#        title=paste("年変動の要因分解 -", sp))
+# 
+# print(p_stack)
+# 
+# ggsave(
+#   filename = "delta_SHAP_stack_kuro.png",
+#   plot = p_stack,
+#   width = 11,
+#   height = 8,
+#   units = "in",
+#   dpi = 300
+# )
