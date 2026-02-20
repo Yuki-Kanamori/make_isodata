@@ -176,10 +176,19 @@ summarise_year_mean_se <- function(df_plot){
 plot_sanriku_yearmean_cross <- function(df_year, title=NULL,
                                         expand_x=0.50, expand_y=0.50,
                                         inner_margin_x=0.02, inner_margin_y=0.02,
-                                        label_years=NULL,  # NULLなら全ラベル、例: c(2003,2011,2023)
+                                        label_years=NULL,
                                         label_size=3){
   
-  # axis range based on annual means
+  # -------------------------
+  # 最新5年フラグ
+  # -------------------------
+  latest_year <- max(df_year$year, na.rm = TRUE)
+  df_year <- df_year %>%
+    mutate(
+      is_recent5 = year >= (latest_year - 4)
+    )
+  
+  # axis range
   x_rng <- range(df_year$mean2, na.rm=TRUE)
   y_rng <- range(df_year$mean,  na.rm=TRUE)
   
@@ -193,7 +202,6 @@ plot_sanriku_yearmean_cross <- function(df_year, title=NULL,
   y_min <- y_rng[1] - y_pad
   y_max <- y_rng[2] + y_pad
   
-  # inner clip bounds (avoid "touching the edge" look)
   x_in_pad <- (x_max - x_min) * inner_margin_x
   y_in_pad <- (y_max - y_min) * inner_margin_y
   
@@ -202,7 +210,6 @@ plot_sanriku_yearmean_cross <- function(df_year, title=NULL,
   y_min_in <- y_min + y_in_pad
   y_max_in <- y_max - y_in_pad
   
-  # clip cross-bars inside inner bounds
   df_plot <- df_year %>%
     mutate(
       xmin_clip = pmax(mean2 - se2, x_min_in),
@@ -211,50 +218,74 @@ plot_sanriku_yearmean_cross <- function(df_year, title=NULL,
       ymax_clip = pmin(mean  + se,  y_max_in)
     )
   
-  # label subset
   df_lab <- if(is.null(label_years)) df_plot else df_plot %>% filter(year %in% label_years)
   
   ggplot(df_plot, aes(x = mean2, y = mean)) +
     
-    # background quadrants (wide area)
-    geom_rect(xmin = 0,     xmax = x_max, ymin = y_min, ymax = 0,     fill = "orange", alpha = 0.06) +
-    geom_rect(xmin = x_min, xmax = 0,     ymin = y_min, ymax = 0,     fill = "red",    alpha = 0.06) +
-    geom_rect(xmin = x_min, xmax = 0,     ymin = 0,     ymax = y_max, fill = "yellow", alpha = 0.06) +
-    geom_rect(xmin = 0,     xmax = x_max, ymin = 0,     ymax = y_max, fill = "green",  alpha = 0.06) +
+    # 背景
+    geom_rect(xmin = 0, xmax = x_max, ymin = y_min, ymax = 0,
+              fill = "orange", alpha = 0.06) +
+    geom_rect(xmin = x_min, xmax = 0, ymin = y_min, ymax = 0,
+              fill = "red", alpha = 0.06) +
+    geom_rect(xmin = x_min, xmax = 0, ymin = 0, ymax = y_max,
+              fill = "yellow", alpha = 0.06) +
+    geom_rect(xmin = 0, xmax = x_max, ymin = 0, ymax = y_max,
+              fill = "green", alpha = 0.06) +
     
     geom_hline(yintercept = 0, linewidth = 0.3) +
     geom_vline(xintercept = 0, linewidth = 0.3) +
     
-    # cross bars (always drawable; SE=0 -> zero-length segment)
+    # cross bars
     geom_segment(aes(x = mean2, xend = mean2, y = ymin_clip, yend = ymax_clip),
                  linewidth = 0.6, color = "black") +
     geom_segment(aes(x = xmin_clip, xend = xmax_clip, y = mean, yend = mean),
                  linewidth = 0.6, color = "black") +
     
-    # trajectory + points
+    # trajectory
     geom_path(alpha = 0.8) +
-    geom_point(aes(color = year), size = 3, alpha = 0.95) +
     
-    # year labels WITHOUT leader lines
-    ggrepel::geom_text_repel(
-      data = df_lab,
-      aes(label = year),
-      size = label_size,
-      segment.color = NA,      # ★ 線を消す
-      segment.alpha = 0,       # 念のため
-      min.segment.length = Inf,
-      box.padding = 0.25,
-      point.padding = 0.15,
-      max.overlaps = Inf
-    ) +
+    # ---- 通常年（丸）----
+  geom_point(
+    data = df_plot %>% filter(!is_recent5),
+    aes(color = year),
+    size = 3,
+    alpha = 0.9
+  ) +
     
-    scale_color_viridis_c() +
+    # ---- 直近5年（星）----
+  geom_point(
+    data = df_plot %>% filter(is_recent5),
+    aes(color = year),
+    shape = 18,        # ★
+    size = 5,
+    stroke = 1.2
+  ) +
+    
+    # ggrepel::geom_text_repel(
+    #   data = df_lab,
+    #   aes(label = year),
+    #   size = label_size,
+    #   segment.color = NA,
+    #   min.segment.length = Inf,
+    #   box.padding = 0.25,
+    #   point.padding = 0.15,
+    #   max.overlaps = Inf
+    # ) +
+    
+    # scale_color_viridis_c() +
+    scale_color_gradient(low = "white", high = "black")+
     coord_cartesian(xlim = c(x_min, x_max), ylim = c(y_min, y_max)) +
     
+    # labs(
+    #   x = "Resource level (freq centered at species mean): annual mean ± SE",
+    #   y = "Environmental axis (total SHAP incl. interactions): annual mean ± SE",
+    #   color = "Year",
+    #   title = title
+    # ) +
     labs(
-      x = "Resource level (freq centered at species mean): annual mean ± SE",
-      y = "Environmental axis (total SHAP incl. interactions): annual mean ± SE",
-      color = "Year",
+      x = "資源レベル（0が平均）",
+      y = "環境からの影響",
+      color = "年",
       title = title
     ) +
     theme_bw(base_family = "HiraKakuPro-W3")
@@ -293,7 +324,7 @@ for(sp in species_list){
   # 年ラベル：全てだと混む場合は label_years を指定してください
   plots[[sp]] <- plot_sanriku_yearmean_cross(
     df_year,
-    title = paste0("Sanriku plot (annual mean ± SE, SHAP) - ", sp),
+    title = paste0(sp),
     expand_x = expand_x, expand_y = expand_y,
     inner_margin_x = inner_margin_x, inner_margin_y = inner_margin_y,
     label_years = NULL,   # 例: c(2003, 2011, 2018, 2023)
@@ -311,3 +342,173 @@ print(plots[["ワカメ"]])
 print(plots[["ヒジキ"]])
 print(plots[["コンブ類"]])
 print(plots[["イガイ類"]])
+
+
+
+# 保存 ----------------------------------------------------------------------
+## 出力フォルダ
+dir.create("sanriku_plot_png", showWarnings = FALSE)
+
+for(sp in names(plots)){
+  
+  message("Saving: ", sp)
+  
+  p <- plots[[sp]]
+  
+  # 空対策
+  if(is.null(p)) next
+  
+  # ファイル名安全化
+  sp_safe <- gsub("[^[:alnum:]_一-龥ぁ-んァ-ン]", "_", sp)
+  
+  ggsave(
+    filename = file.path("sanriku_plot_png",
+                         paste0("Sanriku_plot_", sp_safe, ".png")),
+    plot = p,
+    units = "in",
+    width = 11.69,   # A4横
+    height = 8.27,
+    dpi = 300
+  )
+}
+
+
+
+# 発表スライド用 -----------------------------------------------------------------
+## =========================================================
+## 各種の直近5年平均 ± SE を1枚にまとめる（三陸サマリー）
+## =========================================================
+jp_font <- "HiraKakuPro-W3"
+
+## -------------------------
+## 1) 各種の直近5年平均 ± SE を計算
+## -------------------------
+
+df_recent5_all <- map_dfr(names(sanriku_yearmean), function(sp){
+  
+  df <- sanriku_yearmean[[sp]]
+  if(is.null(df) || nrow(df) == 0) return(NULL)
+  
+  latest_year <- max(df$year, na.rm = TRUE)
+  
+  df_recent <- df %>%
+    filter(year >= latest_year - 4)
+  
+  if(nrow(df_recent) == 0) return(NULL)
+  
+  # x軸（資源）
+  mean_x <- mean(df_recent$mean2, na.rm = TRUE)
+  sd_x   <- sd(df_recent$mean2,  na.rm = TRUE)
+  n_x    <- sum(is.finite(df_recent$mean2))
+  se_x   <- ifelse(n_x > 1, sd_x / sqrt(n_x), 0)
+  
+  # y軸（環境）
+  mean_y <- mean(df_recent$mean, na.rm = TRUE)
+  sd_y   <- sd(df_recent$mean,  na.rm = TRUE)
+  n_y    <- sum(is.finite(df_recent$mean))
+  se_y   <- ifelse(n_y > 1, sd_y / sqrt(n_y), 0)
+  
+  tibble(
+    species = sp,
+    mean_x = mean_x,
+    mean_y = mean_y,
+    se_x = se_x,
+    se_y = se_y
+  )
+})
+
+## -------------------------
+## 2) 軸範囲
+## -------------------------
+
+x_rng <- range(df_recent5_all$mean_x, na.rm=TRUE)
+y_rng <- range(df_recent5_all$mean_y, na.rm=TRUE)
+
+x_pad <- diff(x_rng) * 0.4
+y_pad <- diff(y_rng) * 0.4
+
+if(diff(x_rng) == 0) x_pad <- 0.05
+if(diff(y_rng) == 0) y_pad <- 0.05
+
+x_min <- x_rng[1] - x_pad
+x_max <- x_rng[2] + x_pad
+y_min <- y_rng[1] - y_pad
+y_max <- y_rng[2] + y_pad
+
+## -------------------------
+## 3) プロット
+## -------------------------
+
+fig_summary <- ggplot(df_recent5_all,
+                      aes(x = mean_x, y = mean_y)) +
+  
+  # 背景四象限
+  geom_rect(xmin = 0, xmax = x_max, ymin = y_min, ymax = 0,
+            fill = "orange", alpha = 0.1) +
+  geom_rect(xmin = x_min, xmax = 0, ymin = y_min, ymax = 0,
+            fill = "red", alpha = 0.1) +
+  geom_rect(xmin = x_min, xmax = 0, ymin = 0, ymax = y_max,
+            fill = "yellow", alpha = 0.1) +
+  geom_rect(xmin = 0, xmax = x_max, ymin = 0, ymax = y_max,
+            fill = "green", alpha = 0.1) +
+  
+  geom_hline(yintercept = 0, linewidth = 0.3) +
+  geom_vline(xintercept = 0, linewidth = 0.3) +
+  
+  # # --- 十字バー ---
+  # geom_segment(aes(x = mean_x - se_x,
+  #                  xend = mean_x + se_x,
+  #                  y = mean_y,
+  #                  yend = mean_y),
+  #              linewidth = 1) +
+  # 
+  # geom_segment(aes(x = mean_x,
+  #                  xend = mean_x,
+  #                  y = mean_y - se_y,
+  #                  yend = mean_y + se_y),
+  #              linewidth = 1) +
+  
+  # 点
+  geom_point(size = 6, color = "black") +
+  
+  ggrepel::geom_text_repel(
+    aes(label = species),
+    size = 5,
+    family = jp_font,
+    segment.color = NA,
+    box.padding = 0.4,
+    point.padding = 0.3,
+    max.overlaps = Inf
+  ) +
+  
+  coord_cartesian(xlim = c(x_min, x_max),
+                  ylim = c(y_min, y_max)) +
+  
+  labs(
+    x = "資源水準（0は24年間の平均値）",
+    y = "環境からの影響",
+    title = ""
+  ) +
+  
+  theme_bw(base_family = "HiraKakuPro-W3") +
+  theme(
+    plot.title = element_text(size = 18),
+    axis.title = element_text(size = 16),
+    axis.text  = element_text(size = 14)
+  )
+
+print(fig_summary)
+
+## -------------------------
+## 4) 保存（スライド用）
+## -------------------------
+
+ggsave(
+  filename = "Sanriku_recent5_species_summary.png",
+  plot = fig_summary,
+  width = 13,
+  height = 9,
+  units = "in",
+  dpi = 300
+)
+
