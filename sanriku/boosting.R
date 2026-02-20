@@ -512,3 +512,100 @@ ggsave(
   dpi = 300
 )
 
+
+
+# 要因解析 --------------------------------------------------------------------
+shap_yearly <- list()
+
+for(sp in names(fits)){
+  
+  fit <- fits[[sp]]
+  
+  X_scaled <- as.matrix(fit$df_scaled[, pred_vars, drop=FALSE])
+  
+  shap_vals <- predict(fit$model, X_scaled, predcontrib = TRUE)
+  shap_df <- as.data.frame(shap_vals)
+  
+  shap_df <- shap_df[, colnames(shap_df) != "BIAS", drop=FALSE]
+  colnames(shap_df) <- pred_vars
+  
+  df_year <- fit$df_raw %>%
+    select(year) %>%
+    bind_cols(shap_df) %>%
+    pivot_longer(-year, names_to="variable", values_to="shap") %>%
+    group_by(year, variable) %>%
+    summarise(
+      importance = mean(abs(shap), na.rm=TRUE),   # 強さ
+      direction  = mean(shap,      na.rm=TRUE),  # 方向（＋/−）
+      .groups="drop"
+    )
+  
+  shap_yearly[[sp]] <- df_year
+}
+
+
+
+# =========================================================
+# SHAP積み上げグラフ（種ごとに自動作成・保存）
+# =========================================================
+
+dir.create("shap_stack_png", showWarnings = FALSE)
+
+for(sp in names(shap_yearly)){
+  
+  message("Creating stack plot: ", sp)
+  
+  df_plot <- shap_yearly[[sp]]
+  
+  if(is.null(df_plot) || nrow(df_plot) == 0) next
+  
+  p_stack_level <- ggplot(df_plot,
+                          aes(x = year,
+                              y = direction,
+                              fill = variable)) +
+    
+    geom_col(color = "black", linewidth = 0.3) +
+    
+    geom_hline(yintercept = 0,
+               color = "black",
+               linewidth = 0.5) +
+    
+    scale_fill_manual(
+      values = c(
+        "icumu_MHW" = "tomato",    # 熱波
+        "icumu_MCS" = "skyblue",   # 寒波
+        "m_sst"     = "gold"       # 平均水温
+      ),
+      labels = c(
+        "icumu_MHW" = "熱波",
+        "icumu_MCS" = "寒波",
+        "m_sst"     = "平均水温"
+      )
+    ) +
+    
+    scale_x_continuous(breaks = unique(df_plot$year)) +
+    
+    theme_bw(base_family = "HiraKakuPro-W3") +
+    labs(
+      y = "環境からの影響（SHAP平均）",
+      x = "年",
+      fill = "環境要因",
+      title = sp
+    )
+  
+  print(p_stack_level)
+  
+  # ファイル名安全化
+  sp_safe <- gsub("[^[:alnum:]_一-龥ぁ-んァ-ン]", "_", sp)
+  
+  ggsave(
+    filename = file.path("shap_stack_png",
+                         paste0("SHAP_stack_", sp_safe, ".png")),
+    plot = p_stack_level,
+    width = 11,
+    height = 8,
+    units = "in",
+    dpi = 300,
+    device = ragg::agg_png
+  )
+}
