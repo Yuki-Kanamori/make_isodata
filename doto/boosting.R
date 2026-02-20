@@ -766,27 +766,43 @@ p_stack_level <- ggplot(df_plot,
                             y = direction,
                             fill = variable)) +
   geom_col() +
+  geom_col(color = "black", linewidth = 0.3) +
   geom_hline(yintercept = 0,
              color = "black",
              linewidth = 0.5) +
+  
+  # ★ ここで色を明示指定
+  scale_fill_manual(
+    values = c(
+      "icumu_MHW" = "tomato",  # 赤（熱波）
+      "icumu_MCS" = "skyblue",  # 青（寒波）
+      "m_sst"     = "gold"   # 緑（水温）
+    ),
+    labels = c(
+      "icumu_MHW" = "熱波",
+      "icumu_MCS" = "寒波",
+      "m_sst"     = "平均水温"
+    )
+  ) +
+  
   theme_bw(base_family = "HiraKakuPro-W3") +
   labs(
     y = "環境からの影響",
-    x = "年"
-    # title = paste("環境寄与のレベル分解 -", sp)
+    x = "年",
+    fill = "環境要因"
   )
 
 print(p_stack_level)
 
 ggsave(
-    filename = "SHAP_stack_kuro.png",
-    plot = p_stack_level,
-    width = 11,
-    height = 8,
-    units = "in",
-    dpi = 300
-  )
-
+  filename = paste0("SHAP_stack_", sp, ".png"),
+  plot = p_stack_level,
+  width = 11,
+  height = 8,
+  units = "in",
+  dpi = 300,
+  device = ragg::agg_png
+)
 
 
 # # 分解 ----------------------------------------------------------------------
