@@ -12,7 +12,12 @@ setwd(dir_iso)
 
 # data --------------------------------------------------------------------
 df2 = read.csv("df_boosting_doto.csv", fileEncoding = "CP932")
-
+summary(df2)
+df2 <- df2 %>%
+  mutate(
+    icumu_MHW = replace_na(icumu_MHW, 0),
+    icumu_MCS = replace_na(icumu_MCS, 0)
+  )
 
 ## -------------------------
 ## 0) settings
@@ -766,9 +771,9 @@ p_stack_level <- ggplot(df_plot,
              linewidth = 0.5) +
   theme_bw(base_family = "HiraKakuPro-W3") +
   labs(
-    y = "平均SHAP（環境寄与の分解）",
-    x = "Year",
-    title = paste("環境寄与のレベル分解 -", sp)
+    y = "環境からの影響",
+    x = "年"
+    # title = paste("環境寄与のレベル分解 -", sp)
   )
 
 print(p_stack_level)
