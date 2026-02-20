@@ -717,41 +717,41 @@ for(sp in names(fits)){
   shap_yearly[[sp]] <- df_year
 }
 
-fig <- ggplot(shap_yearly[["フクロフノリ"]],
-              aes(x = year,
-                  y = direction,
-                  fill = direction > 0)) +
-  geom_col() +
-  scale_fill_manual(
-    values = c("TRUE" = "red",
-               "FALSE" = "blue"),
-    guide = "none"
-  ) +
-  facet_wrap(~variable) +
-  theme_bw(base_family = "HiraKakuPro-W3") +
-  labs(
-    y = "SHAP効果（＋増加 / −減少）",
-    x = "Year"
-  )
-ggsave(filename = "trend_shap_funo_+-.png", plot = fig, units = "in", width = 11.69, height = 8.27)
-
-fig <- ggplot(shap_yearly[["クロバギンナンソウ"]],
-              aes(x = year,
-                  y = direction,
-                  fill = direction > 0)) +
-  geom_col() +
-  scale_fill_manual(
-    values = c("TRUE" = "red",
-               "FALSE" = "blue"),
-    guide = "none"
-  ) +
-  facet_wrap(~variable) +
-  theme_bw(base_family = "HiraKakuPro-W3") +
-  labs(
-    y = "SHAP効果（＋増加 / −減少）",
-    x = "Year"
-  )
-ggsave(filename = "trend_shap_kuro.png", plot = fig, units = "in", width = 11.69, height = 8.27)
+# fig <- ggplot(shap_yearly[["フクロフノリ"]],
+#               aes(x = year,
+#                   y = direction,
+#                   fill = direction > 0)) +
+#   geom_col() +
+#   scale_fill_manual(
+#     values = c("TRUE" = "red",
+#                "FALSE" = "blue"),
+#     guide = "none"
+#   ) +
+#   facet_wrap(~variable) +
+#   theme_bw(base_family = "HiraKakuPro-W3") +
+#   labs(
+#     y = "SHAP効果（＋増加 / −減少）",
+#     x = "Year"
+#   )
+# ggsave(filename = "trend_shap_funo_+-.png", plot = fig, units = "in", width = 11.69, height = 8.27)
+# 
+# fig <- ggplot(shap_yearly[["クロバギンナンソウ"]],
+#               aes(x = year,
+#                   y = direction,
+#                   fill = direction > 0)) +
+#   geom_col() +
+#   scale_fill_manual(
+#     values = c("TRUE" = "red",
+#                "FALSE" = "blue"),
+#     guide = "none"
+#   ) +
+#   facet_wrap(~variable) +
+#   theme_bw(base_family = "HiraKakuPro-W3") +
+#   labs(
+#     y = "SHAP効果（＋増加 / −減少）",
+#     x = "Year"
+#   )
+# ggsave(filename = "trend_shap_kuro.png", plot = fig, units = "in", width = 11.69, height = 8.27)
 
 
 ### 積み上げグラフにする
