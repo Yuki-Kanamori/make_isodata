@@ -199,6 +199,32 @@ write.csv(target3, "df_boosting_doto.csv", fileEncoding = "CP932", row.names = F
 
 
 
+# 環境変化の作図 -----------------------------------------------------------------
+df_fig = target3 %>% filter(species == "フクロフノリ") %>% select(year, m_sst, icumu_MHW, icumu_MCS) %>%
+  mutate(
+    icumu_MHW = replace_na(icumu_MHW, 0),
+    icumu_MCS = replace_na(icumu_MCS, 0)
+  ) %>%
+  gather(key = type, value = value, 2:4)  %>% group_by(year, type) %>% summarise(value = mean(value, na.rm = T))
+
+fig = ggplot(df_fig,
+       aes(x = year, y = value)) +
+  geom_line(color = "black", linewidth = 1) +
+  geom_point(size = 2) +
+  facet_wrap(~ type, ncol = 3,
+             labeller = labeller(
+               event_type = c(m_sst = "平均水温", icumu_MHW = "熱波", icumu_MCS = "寒波")
+             ), scale = "free") +
+  labs(
+    x = "Year"
+  ) +
+  theme_bw(base_family = "HiraKakuPro-W3")
+
+ggsave(filename = "trend_akkeshi_env.png", plot = fig, units = "in", width = 11.69, height = 8.27)
+
+
+
+
 # トレンド ---------------------------------------------------------------------
 fig_target = target3 %>% group_by(year, species) %>% summarize(mean = mean(freq), sd = sd(freq))
 
