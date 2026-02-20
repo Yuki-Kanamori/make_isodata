@@ -172,10 +172,19 @@ summarise_year_mean_se <- function(df_plot){
 plot_sanriku_yearmean_cross <- function(df_year, title=NULL,
                                         expand_x=0.50, expand_y=0.50,
                                         inner_margin_x=0.02, inner_margin_y=0.02,
-                                        label_years=NULL,  # NULLなら全ラベル、例: c(2003,2011,2023)
+                                        label_years=NULL,
                                         label_size=3){
   
-  # axis range based on annual means
+  # ---- 年の新旧判定 ----
+  df_year <- df_year %>%
+    arrange(year) %>%
+    mutate(
+      year_rank = rank(year, ties.method = "first"),
+      n_year = n(),
+      recent5 = year >= max(year) - 4     # 0〜1に正規化
+    )
+  
+  # ---- 軸範囲 ----
   x_rng <- range(df_year$mean2, na.rm=TRUE)
   y_rng <- range(df_year$mean,  na.rm=TRUE)
   
@@ -189,7 +198,6 @@ plot_sanriku_yearmean_cross <- function(df_year, title=NULL,
   y_min <- y_rng[1] - y_pad
   y_max <- y_rng[2] + y_pad
   
-  # inner clip bounds (avoid "touching the edge" look)
   x_in_pad <- (x_max - x_min) * inner_margin_x
   y_in_pad <- (y_max - y_min) * inner_margin_y
   
@@ -198,7 +206,6 @@ plot_sanriku_yearmean_cross <- function(df_year, title=NULL,
   y_min_in <- y_min + y_in_pad
   y_max_in <- y_max - y_in_pad
   
-  # clip cross-bars inside inner bounds
   df_plot <- df_year %>%
     mutate(
       xmin_clip = pmax(mean2 - se2, x_min_in),
@@ -207,52 +214,58 @@ plot_sanriku_yearmean_cross <- function(df_year, title=NULL,
       ymax_clip = pmin(mean  + se,  y_max_in)
     )
   
-  # label subset
   df_lab <- if(is.null(label_years)) df_plot else df_plot %>% filter(year %in% label_years)
   
   ggplot(df_plot, aes(x = mean2, y = mean)) +
     
-    # background quadrants (wide area)
-    geom_rect(xmin = 0,     xmax = x_max, ymin = y_min, ymax = 0,     fill = "orange", alpha = 0.06) +
-    geom_rect(xmin = x_min, xmax = 0,     ymin = y_min, ymax = 0,     fill = "red",    alpha = 0.06) +
-    geom_rect(xmin = x_min, xmax = 0,     ymin = 0,     ymax = y_max, fill = "yellow", alpha = 0.06) +
-    geom_rect(xmin = 0,     xmax = x_max, ymin = 0,     ymax = y_max, fill = "green",  alpha = 0.06) +
+    # 背景
+    geom_rect(xmin = 0, xmax = x_max, ymin = y_min, ymax = 0,
+              fill = "orange", alpha = 0.06) +
+    geom_rect(xmin = x_min, xmax = 0, ymin = y_min, ymax = 0,
+              fill = "red", alpha = 0.06) +
+    geom_rect(xmin = x_min, xmax = 0, ymin = 0, ymax = y_max,
+              fill = "yellow", alpha = 0.06) +
+    geom_rect(xmin = 0, xmax = x_max, ymin = 0, ymax = y_max,
+              fill = "green", alpha = 0.06) +
     
     geom_hline(yintercept = 0, linewidth = 0.3) +
     geom_vline(xintercept = 0, linewidth = 0.3) +
     
-    # cross bars (always drawable; SE=0 -> zero-length segment)
+    # 十字バー
     geom_segment(aes(x = mean2, xend = mean2, y = ymin_clip, yend = ymax_clip),
                  linewidth = 0.6, color = "black") +
     geom_segment(aes(x = xmin_clip, xend = xmax_clip, y = mean, yend = mean),
                  linewidth = 0.6, color = "black") +
     
-    # trajectory + points
-    geom_path(alpha = 0.8) +
-    geom_point(aes(color = year), size = 3, alpha = 0.95) +
+    # 軌跡
+    geom_path(alpha = 0.6, color = "grey40") +
     
-    # year labels WITHOUT leader lines
+    # 点（昔→白、最近→黒）
+    geom_point(aes(fill = year,
+                   shape = recent5),
+               size = 3,
+               color = "black") +
+    
+    scale_fill_gradient(low = "white", high = "black") +
+    scale_shape_manual(values = c(`FALSE` = 21, `TRUE` = 23)) +guides(shape = "none")+
+    
     ggrepel::geom_text_repel(
       data = df_lab,
       aes(label = year),
       size = label_size,
-      segment.color = NA,      # ★ 線を消す
-      segment.alpha = 0,       # 念のため
-      min.segment.length = Inf,
-      box.padding = 0.25,
-      point.padding = 0.15,
+      segment.color = NA,
       max.overlaps = Inf
     ) +
     
-    scale_color_viridis_c() +
     coord_cartesian(xlim = c(x_min, x_max), ylim = c(y_min, y_max)) +
     
     labs(
       x = "資源量（0が平均値）",
       y = "環境の影響",
-      color = "Year",
-      title = title
+      title = title,
+      fill = "年"
     ) +
+    
     theme_bw(base_family = "HiraKakuPro-W3")
 }
 
@@ -289,7 +302,7 @@ for(sp in species_list){
   # 年ラベル：全てだと混む場合は label_years を指定してください
   plots[[sp]] <- plot_sanriku_yearmean_cross(
     df_year,
-    title = paste0("Sanriku plot (annual mean ± SE, SHAP) - ", sp),
+    title = paste0(sp),
     expand_x = expand_x, expand_y = expand_y,
     inner_margin_x = inner_margin_x, inner_margin_y = inner_margin_y,
     label_years = NULL,   # 例: c(2003, 2011, 2018, 2023)
