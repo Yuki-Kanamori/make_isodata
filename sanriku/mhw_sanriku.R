@@ -291,6 +291,111 @@ ggsave(filename = "trend_sanriku_env.png", plot = fig, units = "in", width = 11.
 
 
 
+
+# 資源状況 --------------------------------------------------------------------
+jp_font <- "HiraKakuPro-W3"
+
+## 1) 種×年：平均 dens ± SE
+df_year <- df2 %>%
+  group_by(species, year) %>%
+  summarise(
+    mean_dens = mean(freq, na.rm = TRUE),
+    sd_dens   = sd(freq, na.rm = TRUE),
+    n         = sum(is.finite(freq)),
+    se_dens   = ifelse(n > 1, sd_dens / sqrt(n), 0),
+    .groups = "drop"
+  ) %>%
+  mutate(species = as.character(species))  # ★facet紐付けを確実にする
+
+## 2) 赤破線：その種の「mean_dens」の min/max を3等分（2本）
+df_lines <- df_year %>%
+  group_by(species) %>%
+  summarise(
+    dens_min = min(mean_dens, na.rm = TRUE),
+    dens_max = max(mean_dens, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    yint1 = dens_min + (dens_max - dens_min) / 3,
+    yint2 = dens_min + 2 * (dens_max - dens_min) / 3
+  ) %>%
+  pivot_longer(c(yint1, yint2), names_to = "which", values_to = "yint") %>%
+  mutate(species = as.character(species))  # ★facet紐付けを確実にする
+
+## 3) 念のためチェック（yint は必ず min-max の間）
+stopifnot(all(df_lines$yint >= rep(df_lines %>% distinct(species, dens_min) %>% arrange(species) %>% pull(dens_min), each = 2) - 1e-8))
+stopifnot(all(df_lines$yint <= rep(df_lines %>% distinct(species, dens_max) %>% arrange(species) %>% pull(dens_max), each = 2) + 1e-8))
+
+## 4) 作図
+fig <- ggplot(df_year, aes(x = year, y = mean_dens)) +
+  geom_ribbon(aes(ymin = mean_dens - se_dens,
+                  ymax = mean_dens + se_dens),
+              alpha = 0.2) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 1.8) +
+  
+  ## ★speciesを持つdf_linesを使う（facetに正しく紐付く）
+  geom_hline(
+    data = df_lines,
+    aes(yintercept = yint),
+    color = "red",
+    linetype = "dashed",
+    linewidth = 0.7
+  ) +
+  
+  facet_wrap(~ species, ncol = 2, scales = "free_y") +
+  labs(x = "年", y = "資源量 ± SE", title = "") +
+  theme_bw(base_family = jp_font)
+
+print(fig)
+
+## 5) 縦長で保存
+ggsave(
+  filename = "dens_yearly_facet_vertical.png",
+  plot = fig,
+  width = 8,
+  height = 14,
+  units = "in",
+  dpi = 300
+)
+
+
+
+
+# 資源の動向 -------------------------------------------------------------------
+library(broom)
+
+## 1) 直近5年
+latest_year <- max(df2$year, na.rm = TRUE)
+
+df_recent <- df2 %>%
+  filter(year >= latest_year - 4)
+
+## 2) 種ごとに回帰（安全な方法）
+
+reg_results <- df_recent %>%
+  group_by(species) %>%
+  nest() %>%
+  mutate(
+    model = map(data, ~ lm(freq ~ year, data = .x)),
+    tidy  = map(model, broom::tidy)
+  ) %>%
+  unnest(tidy) %>%
+  ungroup()
+
+## 3) year の係数のみ
+
+beta_year <- reg_results %>%
+  filter(term == "year") %>%
+  select(species, estimate, std.error, statistic, p.value) %>%
+  arrange(desc(estimate))
+
+print(beta_year)
+
+
+
+
+
 # 各生物 --------------------------------------------
 unique(df2$species) # "テングサ類" "フクロフノリ" "マツモ" "イガイ類" "ヒジキ" "コンブ類" "ワカメ" 
 

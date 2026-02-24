@@ -261,16 +261,16 @@ plot_sanriku_yearmean_cross <- function(df_year, title=NULL,
     stroke = 1.2
   ) +
     
-    # ggrepel::geom_text_repel(
-    #   data = df_lab,
-    #   aes(label = year),
-    #   size = label_size,
-    #   segment.color = NA,
-    #   min.segment.length = Inf,
-    #   box.padding = 0.25,
-    #   point.padding = 0.15,
-    #   max.overlaps = Inf
-    # ) +
+    ggrepel::geom_text_repel(
+      data = df_lab,
+      aes(label = year),
+      size = label_size,
+      segment.color = NA,
+      min.segment.length = Inf,
+      box.padding = 0.25,
+      point.padding = 0.15,
+      max.overlaps = Inf
+    ) +
     
     # scale_color_viridis_c() +
     scale_color_gradient(low = "white", high = "black")+
@@ -342,7 +342,9 @@ print(plots[["ワカメ"]])
 print(plots[["ヒジキ"]])
 print(plots[["コンブ類"]])
 print(plots[["イガイ類"]])
-
+print(plots[["ツノマタ類"]])
+print(plots[["クボガイ"]])
+print(plots[["マボヤ"]])
 
 
 # 保存 ----------------------------------------------------------------------
