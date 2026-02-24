@@ -38,20 +38,29 @@ ext = read.csv("sanriku07C_Ext.csv", fileEncoding = "CP932")
 
 
 # 旧天然区と延長データから水産有用種のデータを抽出する
-matu_c = c %>% filter(species == "イガイ" | species == "マツモ" | species == "座マツモ" | species == "ヒメテングサ" | species == "マコンブ" | species == "チガイソ" | species == "ホソメコンブ" | species == "ムラサキイガイ" | species == "ワカメ" | species == "フクロフノリ" | species == "ヒジキ")
+matu_c = c %>% filter(species == "イガイ" | species == "マツモ" | species == "座マツモ" | species == "ヒメテングサ" | species == "マコンブ" | species == "チガイソ" | species == "ホソメコンブ" | species == "ムラサキイガイ" | species == "ワカメ" | species == "フクロフノリ" | species == "ヒジキ" | species == "マボヤ" | species == "ツノマタ属spp" | species == "ツノマタ" | species == "イボツノマタ" | species == "マルバツノマタ")
 unique(matu_c$species)
-matu_ext = ext %>% filter(species == "イガイ" | species == "マツモ" | species == "座マツモ" | species == "ヒメテングサ" | species == "マコンブ" | species == "チガイソ" | species == "ホソメコンブ" | species == "ムラサキイガイ" | species == "ワカメ" | species == "フクロフノリ" | species == "ヒジキ")
+matu_ext = ext %>% filter(species == "イガイ" | species == "マツモ" | species == "座マツモ" | species == "ヒメテングサ" | species == "マコンブ" | species == "チガイソ" | species == "ホソメコンブ" | species == "ムラサキイガイ" | species == "ワカメ" | species == "フクロフノリ" | species == "ヒジキ" | species == "マボヤ" | species == "ツノマタ" | species == "イボツノマタ" | species == "マルバツノマタ")
 
 # surveyという列を新しく作成し，旧天然区ならC・延長ならExtと入れる
 matu_c = matu_c %>% mutate(survey = "C")
 matu_ext = matu_ext %>% mutate(survey = "Ext")
 
 # データを縦向きに統合する
-matu = rbind(matu_c, matu_ext)
+matu = rbind(matu_c, matu_ext) %>% select(-column, -row) %>% mutate(count = 1)
+
+
+### 移動性
+c_mob = read.csv("sanriku07C_mob.csv", fileEncoding = "CP932") %>% mutate(survey = "C") %>% filter(species == "クボガイ")
+ext_mob = read.csv("sanriku07C_Ext_mob.csv", fileEncoding = "CP932") %>% mutate(survey = "Ext") %>% filter(species == "クボガイ")
+
+matu2 = rbind(c_mob, ext_mob) %>% mutate(plot = str_sub(plot, 1, 3)) %>% select(-height, -row)
+
+matu = rbind(matu, matu2)
 
 # 種名を変更する
 sp = data.frame(species = unique(matu$species))
-sp$species2 = c("イガイ類", "マツモ", "テングサ類", "ヒジキ","フクロフノリ", "イガイ類", "マツモ", "コンブ類", "ワカメ", "コンブ類", "コンブ類")
+sp$species2 = c("イガイ類", "マツモ", "テングサ類", "ヒジキ","フクロフノリ", "イガイ類", "マツモ", "ツノマタ類", "ツノマタ類", "ツノマタ類", "コンブ類", "ワカメ", "コンブ類", "ツノマタ類", "マボヤ", "コンブ類", "クボガイ")
 matu = matu %>% left_join(sp, by = "species") 
 matu$species = NULL
 matu = matu %>% rename(species = species2)
