@@ -22,7 +22,7 @@ suppressPackageStartupMessages({
 ## -------------------------
 ## 0) data & font
 ## -------------------------
-df2 <- sessile2   # <- データ名が違うならここだけ変更
+df2 <- read.csv("/Users/Yuki/Library/CloudStorage/Dropbox/isodata/sanriku/07/df_boosting_sanriku2.csv", fileEncoding = "CP932")   # <- データ名が違うならここだけ変更
 
 # 日本語フォント（macOS想定。Windowsなら "Yu Gothic" などに変更）
 jp_font <- "Hiragino Sans"
@@ -463,3 +463,237 @@ for(sp in species_done){
 }
 
 message("DONE. Saved to: ", normalizePath(out_dir))
+
+
+
+# 発表スライド用 -----------------------------------------------------------------
+## =========================================================
+## 各種の直近5年平均 ± SE を1枚にまとめる（三陸サマリー）
+## =========================================================
+jp_font <- "HiraKakuPro-W3"
+
+## -------------------------
+## 1) 各種の直近5年平均 ± SE を計算
+## -------------------------
+
+df_recent5_all <- map_dfr(names(sanriku_yearmean), function(sp){
+  
+  df <- sanriku_yearmean[[sp]]
+  if(is.null(df) || nrow(df) == 0) return(NULL)
+  
+  latest_year <- max(df$year, na.rm = TRUE)
+  
+  df_recent <- df %>%
+    filter(year >= latest_year - 4)
+  
+  if(nrow(df_recent) == 0) return(NULL)
+  
+  # x軸（資源）
+  mean_x <- mean(df_recent$mean2, na.rm = TRUE)
+  sd_x   <- sd(df_recent$mean2,  na.rm = TRUE)
+  n_x    <- sum(is.finite(df_recent$mean2))
+  se_x   <- ifelse(n_x > 1, sd_x / sqrt(n_x), 0)
+  
+  # y軸（環境）
+  mean_y <- mean(df_recent$mean, na.rm = TRUE)
+  sd_y   <- sd(df_recent$mean,  na.rm = TRUE)
+  n_y    <- sum(is.finite(df_recent$mean))
+  se_y   <- ifelse(n_y > 1, sd_y / sqrt(n_y), 0)
+  
+  tibble(
+    species = sp,
+    mean_x = mean_x,
+    mean_y = mean_y,
+    se_x = se_x,
+    se_y = se_y
+  )
+})
+
+## -------------------------
+## 2) 軸範囲
+## -------------------------
+
+x_rng <- range(df_recent5_all$mean_x, na.rm=TRUE)
+y_rng <- range(df_recent5_all$mean_y, na.rm=TRUE)
+
+x_pad <- diff(x_rng) * 0.4
+y_pad <- diff(y_rng) * 0.4
+
+if(diff(x_rng) == 0) x_pad <- 0.05
+if(diff(y_rng) == 0) y_pad <- 0.05
+
+x_min <- x_rng[1] - x_pad
+x_max <- x_rng[2] + x_pad
+y_min <- y_rng[1] - y_pad
+y_max <- y_rng[2] + y_pad
+
+## -------------------------
+## 3) プロット
+## -------------------------
+
+fig_summary <- ggplot(df_recent5_all,
+                      aes(x = mean_x, y = mean_y)) +
+  
+  # 背景四象限
+  geom_rect(xmin = 0, xmax = x_max, ymin = y_min, ymax = 0,
+            fill = "orange", alpha = 0.1) +
+  geom_rect(xmin = x_min, xmax = 0, ymin = y_min, ymax = 0,
+            fill = "red", alpha = 0.1) +
+  geom_rect(xmin = x_min, xmax = 0, ymin = 0, ymax = y_max,
+            fill = "yellow", alpha = 0.1) +
+  geom_rect(xmin = 0, xmax = x_max, ymin = 0, ymax = y_max,
+            fill = "green", alpha = 0.1) +
+  
+  geom_hline(yintercept = 0, linewidth = 0.3) +
+  geom_vline(xintercept = 0, linewidth = 0.3) +
+  
+  # # --- 十字バー ---
+  # geom_segment(aes(x = mean_x - se_x,
+  #                  xend = mean_x + se_x,
+  #                  y = mean_y,
+  #                  yend = mean_y),
+  #              linewidth = 1) +
+  # 
+  # geom_segment(aes(x = mean_x,
+  #                  xend = mean_x,
+  #                  y = mean_y - se_y,
+  #                  yend = mean_y + se_y),
+  #              linewidth = 1) +
+  
+  # 点
+  geom_point(size = 6, color = "black") +
+  
+  ggrepel::geom_text_repel(
+    aes(label = species),
+    size = 5,
+    family = jp_font,
+    segment.color = NA,
+    box.padding = 0.4,
+    point.padding = 0.3,
+    max.overlaps = Inf
+  ) +
+  
+  coord_cartesian(xlim = c(x_min, x_max),
+                  ylim = c(y_min, y_max)) +
+  
+  labs(
+    x = "資源水準（0は24年間の平均値）",
+    y = "環境からの影響",
+    title = ""
+  ) +
+  
+  theme_bw(base_family = "HiraKakuPro-W3") +
+  theme(
+    plot.title = element_text(size = 18),
+    axis.title = element_text(size = 16),
+    axis.text  = element_text(size = 14)
+  )
+
+print(fig_summary)
+
+## -------------------------
+## 4) 保存（スライド用）
+## -------------------------
+
+ggsave(
+  filename = "Sanriku_recent5_species_summary_diet.png",
+  plot = fig_summary,
+  width = 13,
+  height = 9,
+  units = "in",
+  dpi = 300
+)
+
+
+# 要因解析 --------------------------------------------------------------------
+shap_yearly <- list()
+
+for(sp in names(fits)){
+  
+  fit <- fits[[sp]]
+  
+  X_scaled <- as.matrix(fit$df_scaled[, pred_vars, drop=FALSE])
+  
+  shap_vals <- predict(fit$model, X_scaled, predcontrib = TRUE)
+  shap_df <- as.data.frame(shap_vals)
+  
+  shap_df <- shap_df[, colnames(shap_df) != "BIAS", drop=FALSE]
+  colnames(shap_df) <- pred_vars
+  
+  df_year <- fit$df_raw %>%
+    select(year) %>%
+    bind_cols(shap_df) %>%
+    pivot_longer(-year, names_to="variable", values_to="shap") %>%
+    group_by(year, variable) %>%
+    summarise(
+      importance = mean(abs(shap), na.rm=TRUE),   # 強さ
+      direction  = mean(shap,      na.rm=TRUE),  # 方向（＋/−）
+      .groups="drop"
+    )
+  
+  shap_yearly[[sp]] <- df_year
+}
+# =========================================================
+# SHAP積み上げグラフ（種ごとに自動作成・保存）
+# =========================================================
+
+dir.create("shap_stack_diet_png", showWarnings = FALSE)
+
+for(sp in names(shap_yearly)){
+  
+  message("Creating stack plot: ", sp)
+  
+  df_plot <- shap_yearly[[sp]]
+  
+  if(is.null(df_plot) || nrow(df_plot) == 0) next
+  
+  p_stack_level <- ggplot(df_plot,
+                          aes(x = year,
+                              y = direction,
+                              fill = variable)) +
+    
+    geom_col(color = "black", linewidth = 0.3) +
+    
+    geom_hline(yintercept = 0,
+               color = "black",
+               linewidth = 0.5) +
+    
+    scale_fill_manual(
+      values = c(
+        "icumu_MHW" = "tomato",    # 熱波
+        "icumu_MCS" = "skyblue",   # 寒波
+        "m_sst"     = "gold"       # 平均水温
+      ),
+      labels = c(
+        "icumu_MHW" = "熱波",
+        "icumu_MCS" = "寒波",
+        "m_sst"     = "平均水温"
+      )
+    ) +
+    
+    scale_x_continuous(breaks = unique(df_plot$year)) +
+    
+    theme_bw(base_family = "HiraKakuPro-W3") +
+    labs(
+      y = "環境からの影響（SHAP平均）",
+      x = "年",
+      fill = "環境要因",
+      title = sp
+    )
+  
+  print(p_stack_level)
+  
+  # ファイル名安全化
+  sp_safe <- gsub("[^[:alnum:]_一-龥ぁ-んァ-ン]", "_", sp)
+  
+  ggsave(
+    filename = file.path("shap_stack_diet_png",
+                         paste0("SHAP_stack_", sp_safe, ".png")),
+    plot = p_stack_level,
+    width = 11,
+    height = 8,
+    units = "in",
+    dpi = 300,
+    device = ragg::agg_png
+  )
+}

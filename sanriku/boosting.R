@@ -576,7 +576,8 @@ for(sp in names(shap_yearly)){
       values = c(
         "icumu_MHW" = "tomato",    # 熱波
         "icumu_MCS" = "skyblue",   # 寒波
-        "m_sst"     = "gold"       # 平均水温
+        "m_sst"     = "gold",       # 平均水温
+        "dens"      = "gray20" # 捕食者
       ),
       labels = c(
         "icumu_MHW" = "熱波",
