@@ -296,7 +296,7 @@ ggsave(filename = "trend_sanriku_env.png", plot = fig, units = "in", width = 11.
 jp_font <- "HiraKakuPro-W3"
 
 ## 1) 種×年：平均 dens ± SE
-df_year <- df2 %>%
+df_year <- df %>% # 2026まで見たい時はdf，df2は環境変数の影響で2025までしか入っていない
   group_by(species, year) %>%
   summarise(
     mean_dens = mean(freq, na.rm = TRUE),
@@ -343,7 +343,7 @@ fig <- ggplot(df_year, aes(x = year, y = mean_dens)) +
     linewidth = 0.7
   ) +
   
-  facet_wrap(~ species, ncol = 2, scales = "free_y") +
+  facet_wrap(~ species, ncol = 5, scales = "free_y") +
   labs(x = "年", y = "資源量 ± SE", title = "") +
   theme_bw(base_family = jp_font)
 
@@ -351,7 +351,8 @@ print(fig)
 
 ## 5) 縦長で保存
 ggsave(
-  filename = "dens_yearly_facet_vertical.png",
+  # filename = "dens_yearly_facet_vertical.png",
+  filename = "dens_yearly_facet_horizonal.png",
   plot = fig,
   width = 8,
   height = 14,
