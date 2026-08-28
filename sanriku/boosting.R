@@ -487,7 +487,7 @@ fig_summary <- ggplot(df_recent5_all,
                   ylim = c(y_min, y_max)) +
   
   labs(
-    x = "資源水準（0は24年間の平均値）",
+    x = "資源水準（0は調査期間の平均値）",
     y = "環境からの影響",
     title = ""
   ) +

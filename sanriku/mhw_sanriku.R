@@ -357,8 +357,8 @@ ggsave(
   # filename = "dens_yearly_facet_vertical.png",
   filename = "dens_yearly_facet_horizonal.png",
   plot = fig,
-  width = 8,
-  height = 14,
+  width = 14,
+  height = 8,
   units = "in",
   dpi = 300
 )
