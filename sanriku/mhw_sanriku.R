@@ -68,7 +68,7 @@ matu = matu %>% rename(species = species2)
 # プロットごと・年ごとに生物量を集計する
 matu2 = matu %>% group_by(year, plot, species) %>% count()
 
-temp = data.frame(plot = unique(matu2$plot), year = rep(2002:2025, each = 25))
+temp = data.frame(plot = unique(matu2$plot), year = rep(2002:2026, each = 25))
 
 matu3 = NULL
 for(i in unique(matu2$species)){
@@ -344,6 +344,9 @@ fig <- ggplot(df_year, aes(x = year, y = mean_dens)) +
   ) +
   
   facet_wrap(~ species, ncol = 5, scales = "free_y") +
+  scale_x_continuous(
+    breaks = c(2002, 2010, 2018, 2026)
+  ) +
   labs(x = "年", y = "資源量 ± SE", title = "") +
   theme_bw(base_family = jp_font)
 
@@ -367,267 +370,284 @@ ggsave(
 library(broom)
 
 ## 1) 直近5年
-latest_year <- max(df2$year, na.rm = TRUE)
+latest_year <- max(df$year, na.rm = TRUE)
 
-df_recent <- df2 %>%
-  filter(year >= latest_year - 4)
+# df_recent <- df %>%
+#   filter(year >= latest_year - 4)
+# 
+# ## 2) 種ごとに回帰（安全な方法）
+# reg_results <- df_recent %>%
+#   group_by(species) %>%
+#   nest() %>%
+#   mutate(
+#     model = map(data, ~ lm(freq ~ year, data = .x)),
+#     tidy  = map(model, broom::tidy)
+#   ) %>%
+#   unnest(tidy) %>%
+#   ungroup()
+# 
+# ## 3) year の係数のみ
+# beta_year <- reg_results %>%
+#   filter(term == "year") %>%
+#   select(species, estimate, std.error, statistic, p.value) %>%
+#   arrange(desc(estimate))
+# 
+# print(beta_year)
 
-## 2) 種ごとに回帰（安全な方法）
 
-reg_results <- df_recent %>%
+# 平均値に対する回帰
+df_recent_year <- df %>%
+  filter(year >= latest_year - 4) %>%
+  group_by(species, year) %>%
+  summarise(
+    mean_freq = mean(freq, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+beta_year <- df_recent_year %>%
   group_by(species) %>%
   nest() %>%
   mutate(
-    model = map(data, ~ lm(freq ~ year, data = .x)),
-    tidy  = map(model, broom::tidy)
+    model = map(data, ~ lm(mean_freq ~ year, data = .x)),
+    tidy = map(model, broom::tidy)
   ) %>%
   unnest(tidy) %>%
-  ungroup()
-
-## 3) year の係数のみ
-
-beta_year <- reg_results %>%
-  filter(term == "year") %>%
-  select(species, estimate, std.error, statistic, p.value) %>%
-  arrange(desc(estimate))
+  filter(term == "year")
 
 print(beta_year)
 
 
-
-
-
-# 各生物 --------------------------------------------
-unique(df2$species) # "テングサ類" "フクロフノリ" "マツモ" "イガイ類" "ヒジキ" "コンブ類" "ワカメ" 
-
-# マツモ
-matu = df2 %>% filter(species == "マツモ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
-summary(matu)
-
-res_matu = NULL
-for(i in unique(matu$plot)){
-  temp2 = matu %>% filter(plot == i)
-  res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
-  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
-  eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "マツモ")
-  res_matu = rbind(res_matu, eff)
-}
-res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = matu)
-res = lm(freq ~ m_sst2 + m_sst2_2 , data = matu)
-summary(res)
-
-summary(matu)
-t_matu = matu %>% filter(between(year, 2019, 2023))
-
-res_t_matu = NULL
-for(i in unique(matu$plot)){
-  temp2 = t_matu %>% filter(plot == i)
-  res = lm(freq*100 ~ year, data = temp2)
-  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
-  eff = data.frame(eff = res[["coefficients"]][["year"]], species = "マツモ")
-  res_t_matu = rbind(res_t_matu, eff)
-}
-res_t_matu
-res_matu
-summary(lm(freq*100 ~ year, data = t_matu))
-
-# res_matu2 = data.frame(m_env = mean(res_matu$eff), se_env = sd(res_matu$eff)/5,
-#                        m_cov = mean(res_t_matu$eff), se_cov = sd(res_t_matu$eff)/5)
-  
-
-
-# フノリ
-funo = df2 %>% filter(species == "フクロフノリ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
-res_funo = NULL
-for(i in unique(matu$plot)){
-  temp2 = funo %>% filter(plot == i)
-  res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
-  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
-  eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "フノリ")
-  res_funo = rbind(res_funo, eff)
-}
-res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = funo)
-summary(res)
-
-t_funo = funo %>% filter(between(year, 2019, 2023))
-res_t_funo = NULL
-for(i in unique(matu$plot)){
-  temp2 = t_funo %>% filter(plot == i)
-  res = lm(freq*100 ~ year, data = temp2)
-  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
-  eff = data.frame(eff = res[["coefficients"]][["year"]], species = "フノリ")
-  res_t_funo = rbind(res_t_funo, eff)
-}
-res_t_funo
-summary(lm(freq*100 ~ year, data = t_funo))
-
-
-# コンブ類
-kel = df2 %>% filter(species == "コンブ類") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
-res_kel = NULL
-for(i in unique(matu$plot)){
-  temp2 = kel %>% filter(plot == i)
-  res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
-  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
-  eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "コンブ類")
-  res_kel = rbind(res_kel, eff)
-}
-res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = kel)
-summary(res)
-
-t_kel = kel %>% filter(between(year, 2019, 2023))
-
-res_t_kel = NULL
-for(i in unique(matu$plot)){
-  temp2 = t_kel %>% filter(plot == i)
-  res = lm(freq*100 ~ year, data = temp2)
-  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
-  eff = data.frame(eff = res[["coefficients"]][["year"]], species = "コンブ類")
-  res_t_kel = rbind(res_t_kel, eff)
-}
-res_t_kel
-summary(lm(freq*100 ~ year, data = t_kel))
-
-
-# ワカメ
-wak = df2 %>% filter(species == "ワカメ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
-res_wak = NULL
-for(i in unique(matu$plot)){
-  temp2 = wak %>% filter(plot == i)
-  res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
-  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
-  eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "ワカメ")
-  res_wak = rbind(res_wak, eff)
-}
-res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = wak)
-summary(res)
-
-t_wak = wak %>% filter(between(year, 2019, 2023))
-
-res_t_wak = NULL
-for(i in unique(matu$plot)){
-  temp2 = t_wak %>% filter(plot == i)
-  res = lm(freq*100 ~ year, data = temp2)
-  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
-  eff = data.frame(eff = res[["coefficients"]][["year"]], species = "ワカメ")
-  res_t_wak = rbind(res_t_wak, eff)
-}
-res_t_wak
-summary(lm(freq*100 ~ year, data = t_wak))
-
-
-# テングサ類
-ten = df2 %>% filter(species == "テングサ類") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
-res_ten = NULL
-for(i in unique(matu$plot)){
-  temp2 = ten %>% filter(plot == i)
-  res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
-  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
-  eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "テングサ類")
-  res_ten = rbind(res_ten, eff)
-}
-res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = ten)
-summary(res)
-
-t_ten = ten %>% filter(between(year, 2019, 2023))
-
-res_t_ten = NULL
-for(i in unique(matu$plot)){
-  temp2 = t_ten %>% filter(plot == i)
-  res = lm(freq*100 ~ year, data = temp2)
-  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
-  eff = data.frame(eff = res[["coefficients"]][["year"]], species = "テングサ")
-  res_t_ten = rbind(res_t_ten, eff)
-}
-res_t_ten
-summary(lm(freq*100 ~ year, data = t_ten))
-
-
-# イガイ類
-iga = df2 %>% filter(species == "イガイ類") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
-res_iga = NULL
-for(i in unique(matu$plot)){
-  temp2 = iga %>% filter(plot == i)
-  res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
-  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
-  eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "イガイ類")
-  res_iga = rbind(res_iga, eff)
-}
-res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = iga)
-summary(res)
-
-t_iga = iga %>% filter(between(year, 2019, 2023))
-
-res_t_iga = NULL
-for(i in unique(matu$plot)){
-  temp2 = t_iga %>% filter(plot == i)
-  res = lm(freq*100 ~ year, data = temp2)
-  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
-  eff = data.frame(eff = res[["coefficients"]][["year"]], species = "イガイ")
-  res_t_iga = rbind(res_t_iga, eff)
-}
-res_t_iga
-summary(lm(freq*100 ~ year, data = t_iga))
-
-# ヒジキ
-hiji = df2 %>% filter(species == "ヒジキ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
-res_hiji = NULL
-for(i in unique(matu$plot)){
-  temp2 = hiji %>% filter(plot == i)
-  res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
-  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
-  eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "ヒジキ")
-  res_hiji = rbind(res_hiji, eff)
-}
-res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = hiji)
-summary(res)
-
-summary(hiji)
-t_hiji = hiji %>% filter(between(year, 2019, 2023))
-
-res_t_hiji = NULL
-for(i in unique(matu$plot)){
-  temp2 = t_hiji %>% filter(plot == i)
-  res = lm(freq*100 ~ year, data = temp2)
-  # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
-  eff = data.frame(eff = res[["coefficients"]][["year"]], species = "ヒジキ")
-  res_t_hiji = rbind(res_t_hiji, eff)
-}
-res_t_hiji
-summary(lm(freq*100 ~ year, data = t_hiji))
-
-
-
-# 三陸プロット ------------------------------------------------------------------
-res_matu3 = cbind(res_matu, res_t_matu %>% select(-species) %>% rename(eff2 = eff))
-res_funo3 = cbind(res_funo, res_t_funo %>% select(-species) %>% rename(eff2 = eff))
-res_ten3 = cbind(res_ten, res_t_ten %>% select(-species) %>% rename(eff2 = eff))
-res_iga3 = cbind(res_iga, res_t_iga %>% select(-species) %>% rename(eff2 = eff))
-res_wak3 = cbind(res_wak, res_t_wak %>% select(-species) %>% rename(eff2 = eff))
-res_kel3 = cbind(res_kel, res_t_kel %>% select(-species) %>% rename(eff2 = eff))
-res_hiji3 = cbind(res_hiji, res_t_hiji %>% select(-species) %>% rename(eff2 = eff))
-
-sanp = rbind(res_matu3, res_funo3, res_ten3, res_iga3, res_wak3, res_kel3, res_hiji3)
-
-g = ggplot(sanp, aes(x = eff, y = eff2, color = species))
-p = geom_point()
-g+p+theme_bw(base_family = "HiraKakuPro-W3")
-
-sanp2 = sanp %>% group_by(species) %>% summarize(mean = mean(eff), mean2 = mean(eff2), se = sd(eff)/5, se2 = sd(eff2)/5)
-summary(sanp2)
-g = ggplot(sanp2, aes(x = mean2, y = mean))
-p = geom_point(size = 3)
-b = geom_errorbar(aes(ymin = mean-se, ymax = mean+se)) 
-b2 = geom_errorbarh(aes(xmin = mean2-se2, xmax = mean2+se2))
-labs = labs(x = "資源量の傾向（増減）", y = "温暖化と海洋熱波からの影響")
-fig = g+p+b+b2+labs+
-  geom_rect(xmin = 0.0, xmax = 1.2, ymin = -1.5, ymax = 0.0, fill = 'orange', alpha = 0.05)+
-  geom_rect(xmin = -1.3, xmax = 0.0, ymin = -1.5, ymax = 0.0, fill = 'red', alpha = 0.05)+
-  geom_rect(xmin = -1.3, xmax = 0.0, ymin = 0.0, ymax = 1.3, fill = 'yellow', alpha = 0.05)+
-  geom_rect(xmin = 0.0, xmax = 1.2, ymin = 0.0, ymax = 1.3, fill = 'green', alpha = 0.05)+
-  coord_cartesian(xlim = c(-1.2, 0.1), ylim = c(-0.005, 0.02))+
-  # geom_text_repel(label = sanp2$species, family = "HiraKakuPro-W3", size = 5)+
-  theme_bw(base_family = "HiraKakuPro-W3")
-setwd(dir = "/Users/Yuki/Dropbox/isodata/sanriku/")
-ggsave(filename = "sanrikuplot.png", plot = fig, units = "in", width = 11.69, height = 8.27)
+# # 各生物 --------------------------------------------
+# unique(df2$species) # "テングサ類" "フクロフノリ" "マツモ" "イガイ類" "ヒジキ" "コンブ類" "ワカメ" 
+# 
+# # マツモ
+# matu = df2 %>% filter(species == "マツモ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+# summary(matu)
+# 
+# res_matu = NULL
+# for(i in unique(matu$plot)){
+#   temp2 = matu %>% filter(plot == i)
+#   res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
+#   # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+#   eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "マツモ")
+#   res_matu = rbind(res_matu, eff)
+# }
+# res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = matu)
+# res = lm(freq ~ m_sst2 + m_sst2_2 , data = matu)
+# summary(res)
+# 
+# summary(matu)
+# t_matu = matu %>% filter(between(year, 2019, 2023))
+# 
+# res_t_matu = NULL
+# for(i in unique(matu$plot)){
+#   temp2 = t_matu %>% filter(plot == i)
+#   res = lm(freq*100 ~ year, data = temp2)
+#   # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+#   eff = data.frame(eff = res[["coefficients"]][["year"]], species = "マツモ")
+#   res_t_matu = rbind(res_t_matu, eff)
+# }
+# res_t_matu
+# res_matu
+# summary(lm(freq*100 ~ year, data = t_matu))
+# 
+# # res_matu2 = data.frame(m_env = mean(res_matu$eff), se_env = sd(res_matu$eff)/5,
+# #                        m_cov = mean(res_t_matu$eff), se_cov = sd(res_t_matu$eff)/5)
+#   
+# 
+# 
+# # フノリ
+# funo = df2 %>% filter(species == "フクロフノリ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+# res_funo = NULL
+# for(i in unique(matu$plot)){
+#   temp2 = funo %>% filter(plot == i)
+#   res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
+#   # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+#   eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "フノリ")
+#   res_funo = rbind(res_funo, eff)
+# }
+# res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = funo)
+# summary(res)
+# 
+# t_funo = funo %>% filter(between(year, 2019, 2023))
+# res_t_funo = NULL
+# for(i in unique(matu$plot)){
+#   temp2 = t_funo %>% filter(plot == i)
+#   res = lm(freq*100 ~ year, data = temp2)
+#   # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+#   eff = data.frame(eff = res[["coefficients"]][["year"]], species = "フノリ")
+#   res_t_funo = rbind(res_t_funo, eff)
+# }
+# res_t_funo
+# summary(lm(freq*100 ~ year, data = t_funo))
+# 
+# 
+# # コンブ類
+# kel = df2 %>% filter(species == "コンブ類") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+# res_kel = NULL
+# for(i in unique(matu$plot)){
+#   temp2 = kel %>% filter(plot == i)
+#   res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
+#   # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+#   eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "コンブ類")
+#   res_kel = rbind(res_kel, eff)
+# }
+# res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = kel)
+# summary(res)
+# 
+# t_kel = kel %>% filter(between(year, 2019, 2023))
+# 
+# res_t_kel = NULL
+# for(i in unique(matu$plot)){
+#   temp2 = t_kel %>% filter(plot == i)
+#   res = lm(freq*100 ~ year, data = temp2)
+#   # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+#   eff = data.frame(eff = res[["coefficients"]][["year"]], species = "コンブ類")
+#   res_t_kel = rbind(res_t_kel, eff)
+# }
+# res_t_kel
+# summary(lm(freq*100 ~ year, data = t_kel))
+# 
+# 
+# # ワカメ
+# wak = df2 %>% filter(species == "ワカメ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+# res_wak = NULL
+# for(i in unique(matu$plot)){
+#   temp2 = wak %>% filter(plot == i)
+#   res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
+#   # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+#   eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "ワカメ")
+#   res_wak = rbind(res_wak, eff)
+# }
+# res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = wak)
+# summary(res)
+# 
+# t_wak = wak %>% filter(between(year, 2019, 2023))
+# 
+# res_t_wak = NULL
+# for(i in unique(matu$plot)){
+#   temp2 = t_wak %>% filter(plot == i)
+#   res = lm(freq*100 ~ year, data = temp2)
+#   # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+#   eff = data.frame(eff = res[["coefficients"]][["year"]], species = "ワカメ")
+#   res_t_wak = rbind(res_t_wak, eff)
+# }
+# res_t_wak
+# summary(lm(freq*100 ~ year, data = t_wak))
+# 
+# 
+# # テングサ類
+# ten = df2 %>% filter(species == "テングサ類") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+# res_ten = NULL
+# for(i in unique(matu$plot)){
+#   temp2 = ten %>% filter(plot == i)
+#   res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
+#   # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+#   eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "テングサ類")
+#   res_ten = rbind(res_ten, eff)
+# }
+# res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = ten)
+# summary(res)
+# 
+# t_ten = ten %>% filter(between(year, 2019, 2023))
+# 
+# res_t_ten = NULL
+# for(i in unique(matu$plot)){
+#   temp2 = t_ten %>% filter(plot == i)
+#   res = lm(freq*100 ~ year, data = temp2)
+#   # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+#   eff = data.frame(eff = res[["coefficients"]][["year"]], species = "テングサ")
+#   res_t_ten = rbind(res_t_ten, eff)
+# }
+# res_t_ten
+# summary(lm(freq*100 ~ year, data = t_ten))
+# 
+# 
+# # イガイ類
+# iga = df2 %>% filter(species == "イガイ類") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+# res_iga = NULL
+# for(i in unique(matu$plot)){
+#   temp2 = iga %>% filter(plot == i)
+#   res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
+#   # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+#   eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "イガイ類")
+#   res_iga = rbind(res_iga, eff)
+# }
+# res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = iga)
+# summary(res)
+# 
+# t_iga = iga %>% filter(between(year, 2019, 2023))
+# 
+# res_t_iga = NULL
+# for(i in unique(matu$plot)){
+#   temp2 = t_iga %>% filter(plot == i)
+#   res = lm(freq*100 ~ year, data = temp2)
+#   # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+#   eff = data.frame(eff = res[["coefficients"]][["year"]], species = "イガイ")
+#   res_t_iga = rbind(res_t_iga, eff)
+# }
+# res_t_iga
+# summary(lm(freq*100 ~ year, data = t_iga))
+# 
+# # ヒジキ
+# hiji = df2 %>% filter(species == "ヒジキ") %>% mutate(m_sst2_2 = (m_sst2)^2, sum2_2 = (sum2)^2)
+# res_hiji = NULL
+# for(i in unique(matu$plot)){
+#   temp2 = hiji %>% filter(plot == i)
+#   res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2, data = temp2)
+#   # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+#   eff = data.frame(eff = res[["coefficients"]][["m_sst2"]]+res[["coefficients"]][["m_sst2_2"]]+res[["coefficients"]][["sum2"]]+res[["coefficients"]][["sum2_2"]], plot = paste(i), species = "ヒジキ")
+#   res_hiji = rbind(res_hiji, eff)
+# }
+# res = lm(freq ~ m_sst2 + m_sst2_2 + sum2 + sum2_2 , data = hiji)
+# summary(res)
+# 
+# summary(hiji)
+# t_hiji = hiji %>% filter(between(year, 2019, 2023))
+# 
+# res_t_hiji = NULL
+# for(i in unique(matu$plot)){
+#   temp2 = t_hiji %>% filter(plot == i)
+#   res = lm(freq*100 ~ year, data = temp2)
+#   # res2 = data.frame(res[["coefficients"]], plot = paste(i), species = "マツモ")
+#   eff = data.frame(eff = res[["coefficients"]][["year"]], species = "ヒジキ")
+#   res_t_hiji = rbind(res_t_hiji, eff)
+# }
+# res_t_hiji
+# summary(lm(freq*100 ~ year, data = t_hiji))
+# 
+# 
+# 
+# # 三陸プロット ------------------------------------------------------------------
+# res_matu3 = cbind(res_matu, res_t_matu %>% select(-species) %>% rename(eff2 = eff))
+# res_funo3 = cbind(res_funo, res_t_funo %>% select(-species) %>% rename(eff2 = eff))
+# res_ten3 = cbind(res_ten, res_t_ten %>% select(-species) %>% rename(eff2 = eff))
+# res_iga3 = cbind(res_iga, res_t_iga %>% select(-species) %>% rename(eff2 = eff))
+# res_wak3 = cbind(res_wak, res_t_wak %>% select(-species) %>% rename(eff2 = eff))
+# res_kel3 = cbind(res_kel, res_t_kel %>% select(-species) %>% rename(eff2 = eff))
+# res_hiji3 = cbind(res_hiji, res_t_hiji %>% select(-species) %>% rename(eff2 = eff))
+# 
+# sanp = rbind(res_matu3, res_funo3, res_ten3, res_iga3, res_wak3, res_kel3, res_hiji3)
+# 
+# g = ggplot(sanp, aes(x = eff, y = eff2, color = species))
+# p = geom_point()
+# g+p+theme_bw(base_family = "HiraKakuPro-W3")
+# 
+# sanp2 = sanp %>% group_by(species) %>% summarize(mean = mean(eff), mean2 = mean(eff2), se = sd(eff)/5, se2 = sd(eff2)/5)
+# summary(sanp2)
+# g = ggplot(sanp2, aes(x = mean2, y = mean))
+# p = geom_point(size = 3)
+# b = geom_errorbar(aes(ymin = mean-se, ymax = mean+se)) 
+# b2 = geom_errorbarh(aes(xmin = mean2-se2, xmax = mean2+se2))
+# labs = labs(x = "資源量の傾向（増減）", y = "温暖化と海洋熱波からの影響")
+# fig = g+p+b+b2+labs+
+#   geom_rect(xmin = 0.0, xmax = 1.2, ymin = -1.5, ymax = 0.0, fill = 'orange', alpha = 0.05)+
+#   geom_rect(xmin = -1.3, xmax = 0.0, ymin = -1.5, ymax = 0.0, fill = 'red', alpha = 0.05)+
+#   geom_rect(xmin = -1.3, xmax = 0.0, ymin = 0.0, ymax = 1.3, fill = 'yellow', alpha = 0.05)+
+#   geom_rect(xmin = 0.0, xmax = 1.2, ymin = 0.0, ymax = 1.3, fill = 'green', alpha = 0.05)+
+#   coord_cartesian(xlim = c(-1.2, 0.1), ylim = c(-0.005, 0.02))+
+#   # geom_text_repel(label = sanp2$species, family = "HiraKakuPro-W3", size = 5)+
+#   theme_bw(base_family = "HiraKakuPro-W3")
+# setwd(dir = "/Users/Yuki/Dropbox/isodata/sanriku/")
+# ggsave(filename = "sanrikuplot.png", plot = fig, units = "in", width = 11.69, height = 8.27)
 
