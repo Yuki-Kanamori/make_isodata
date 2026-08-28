@@ -1878,9 +1878,9 @@ plot_shap_stack <- function(
         "m_sst" =
           "平均水温",
         "icumu_MHW" =
-          "熱波",
+          "海洋熱波",
         "icumu_MCS" =
-          "寒波"
+          "海洋寒波"
       )
     ) +
     
