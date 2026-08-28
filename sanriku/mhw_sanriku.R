@@ -327,34 +327,126 @@ stopifnot(all(df_lines$yint >= rep(df_lines %>% distinct(species, dens_min) %>% 
 stopifnot(all(df_lines$yint <= rep(df_lines %>% distinct(species, dens_max) %>% arrange(species) %>% pull(dens_max), each = 2) + 1e-8))
 
 ## 4) 作図
-fig <- ggplot(df_year, aes(x = year, y = mean_dens)) +
-  geom_ribbon(aes(ymin = mean_dens - se_dens,
-                  ymax = mean_dens + se_dens),
-              alpha = 0.2) +
-  geom_line(linewidth = 0.8) +
-  geom_point(size = 1.8) +
+fig <- ggplot(
+  df_year,
+  aes(
+    x = year,
+    y = mean_dens
+  )
+) +
   
-  ## ★speciesを持つdf_linesを使う（facetに正しく紐付く）
+  geom_ribbon(
+    aes(
+      ymin = mean_dens - se_dens,
+      ymax = mean_dens + se_dens
+    ),
+    alpha = 0.2
+  ) +
+  
+  geom_line(
+    linewidth = 0.8
+  ) +
+  
+  geom_point(
+    size = 1.8
+  ) +
+  
+  ## speciesを持つdf_linesを使う
   geom_hline(
     data = df_lines,
-    aes(yintercept = yint),
+    aes(
+      yintercept = yint
+    ),
     color = "red",
     linetype = "dashed",
     linewidth = 0.7
   ) +
   
-  facet_wrap(~ species, ncol = 5, scales = "free_y") +
-  scale_x_continuous(
-    breaks = c(2002, 2010, 2018, 2026)
+  facet_wrap(
+    ~ species,
+    ncol = 5,
+    scales = "free_y"
   ) +
-  labs(x = "年", y = "資源量 ± SE", title = "") +
-  theme_bw(base_family = jp_font)
+  
+  scale_x_continuous(
+    breaks = c(
+      2002,
+      2010,
+      2018,
+      2026
+    )
+  ) +
+  
+  labs(
+    x = "年",
+    y = "資源量指数 ± SE",
+    title = ""
+  ) +
+  
+  theme_bw(
+    base_family = jp_font
+  ) +
+  
+  theme(
+    
+    ## -----------------------------------------
+    ## 種名
+    ## -----------------------------------------
+    strip.text =
+      element_text(
+        size = 18
+      ),
+    
+    ## facet上部の灰色部分
+    strip.background =
+      element_rect(
+        linewidth = 0.5
+      ),
+    
+    ## -----------------------------------------
+    ## x・y軸タイトル
+    ## -----------------------------------------
+    axis.title =
+      element_text(
+        size = 16
+      ),
+    
+    ## -----------------------------------------
+    ## 軸の数値・年
+    ## -----------------------------------------
+    axis.text =
+      element_text(
+        size = 11
+      ),
+    
+    ## -----------------------------------------
+    ## パネル間隔
+    ## -----------------------------------------
+    panel.spacing =
+      unit(
+        0.35,
+        "cm"
+      ),
+    
+    ## -----------------------------------------
+    ## 外側余白
+    ## -----------------------------------------
+    plot.margin =
+      margin(
+        7,
+        7,
+        7,
+        7
+      )
+  )
+
 
 print(fig)
 
-## 5) 縦長で保存
+
+## 5) 保存
+
 ggsave(
-  # filename = "dens_yearly_facet_vertical.png",
   filename = "dens_yearly_facet_horizonal.png",
   plot = fig,
   width = 14,
