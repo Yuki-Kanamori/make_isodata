@@ -1070,7 +1070,7 @@ plot_sanriku_yearmean_cross <- function(
     x =
       "資源水準（0は調査期間の平均値）",
     y =
-      "環境からの影響",
+      "海洋環境からの影響",
     color =
       "年",
     title =
@@ -1671,7 +1671,7 @@ fig_summary <-
     x =
       "資源水準（0は調査期間の平均値）",
     y =
-      "環境からの影響",
+      "海洋環境からの影響",
     title = ""
   ) +
   
@@ -1893,7 +1893,7 @@ plot_shap_stack <- function(
       x =
         "年",
       y =
-        "環境からの影響（SHAP平均）",
+        "海洋環境からの影響（SHAP平均）",
       fill =
         "環境要因",
       title =
