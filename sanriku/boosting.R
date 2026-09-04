@@ -6,11 +6,14 @@
 ##
 ## 図1：
 ## - 種別の年別三陸プロット
-## - 10種まとめ（5列×2行、五十音順）
+## - 10種まとめ（4列×3行、五十音順）
 ## - x軸「資源水準（0は調査期間の平均値）」
 ## - まとめ図でも全年ラベル表示
+## - 通常年：白抜き○
+## - 直近5年：黒塗り●
+## - 年の白→黒グラデーションは使用しない
+## - 年の凡例も使用しない
 ## - x/y軸タイトルは図全体で1つ
-## - 種名・軸・凡例を大きめに表示
 ##
 ## 図2：
 ## - 直近5年間の10種サマリー
@@ -21,7 +24,16 @@
 ## - 10種まとめ（5列×2行、五十音順）
 ## - x軸の年表示は3年程度
 ## - x/y軸タイトルは図全体で1つ
-## - 種名・軸・凡例を大きめに表示
+##
+## 文字サイズ：
+## 比較図（width = 14 inch）の
+## 種名18、軸タイトル16、軸文字11
+## と原稿上で同程度に見えるよう、
+## width = 20 inch に合わせて約1.43倍
+##
+## 種名       26
+## 軸タイトル 23
+## 軸文字     16
 ## =========================================================
 
 
@@ -41,14 +53,18 @@ library(ragg)
 ## 1) directory
 ## =========================================================
 
-dir_iso <- "/Users/Yuki/Library/CloudStorage/Dropbox/isodata/sanriku/07"
+dir_iso <-
+  "/Users/Yuki/Library/CloudStorage/Dropbox/isodata/sanriku/07"
 
-setwd(dir_iso)
-
-out_dir <- file.path(
-  dir_iso,
-  "知事賞"
+setwd(
+  dir_iso
 )
+
+out_dir <-
+  file.path(
+    dir_iso,
+    "知事賞"
+  )
 
 dir.create(
   out_dir,
@@ -58,34 +74,39 @@ dir.create(
 
 
 ## 図1
-fig1_dir <- file.path(
-  out_dir,
-  "図1"
-)
+fig1_dir <-
+  file.path(
+    out_dir,
+    "図1"
+  )
 
-fig1_species_dir <- file.path(
-  fig1_dir,
-  "種別"
-)
+fig1_species_dir <-
+  file.path(
+    fig1_dir,
+    "種別"
+  )
 
 
 ## 図2
-fig2_dir <- file.path(
-  out_dir,
-  "図2"
-)
+fig2_dir <-
+  file.path(
+    out_dir,
+    "図2"
+  )
 
 
 ## 図3
-fig3_dir <- file.path(
-  out_dir,
-  "図3"
-)
+fig3_dir <-
+  file.path(
+    out_dir,
+    "図3"
+  )
 
-fig3_species_dir <- file.path(
-  fig3_dir,
-  "種別"
-)
+fig3_species_dir <-
+  file.path(
+    fig3_dir,
+    "種別"
+  )
 
 
 dir.create(
@@ -123,43 +144,47 @@ dir.create(
 ## 2) data
 ## =========================================================
 
-df2 <- read.csv(
-  "df_boosting_sanriku2.csv",
-  fileEncoding = "CP932"
-)
+df2 <-
+  read.csv(
+    "df_boosting_sanriku2.csv",
+    fileEncoding = "CP932"
+  )
 
-summary(df2)
+summary(
+  df2
+)
 
 
 ## =========================================================
 ## 3) settings
 ## =========================================================
 
-pred_vars <- c(
-  "m_sst",
-  "icumu_MHW",
-  "icumu_MCS"
-)
+pred_vars <-
+  c(
+    "m_sst",
+    "icumu_MHW",
+    "icumu_MCS"
+  )
 
 
-xgb_params <- list(
-  booster = "gbtree",
-  objective = "reg:squarederror",
-  eta = 0.05,
-  max_depth = 2,
-  min_child_weight = 10,
-  subsample = 0.8,
-  colsample_bytree = 0.8,
-  gamma = 0,
-  lambda = 1,
-  alpha = 0
-)
+xgb_params <-
+  list(
+    booster = "gbtree",
+    objective = "reg:squarederror",
+    eta = 0.05,
+    max_depth = 2,
+    min_child_weight = 10,
+    subsample = 0.8,
+    colsample_bytree = 0.8,
+    gamma = 0,
+    lambda = 1,
+    alpha = 0
+  )
 
 
 nrounds_max <- 2000
 
 early_stopping_rounds <- 30
-
 
 expand_x <- 0.50
 expand_y <- 0.50
@@ -167,26 +192,47 @@ expand_y <- 0.50
 inner_margin_x <- 0.02
 inner_margin_y <- 0.02
 
-
 jp_font <- "HiraKakuPro-W3"
+
+
+## ---------------------------------------------------------
+## 原稿掲載時の見かけを揃えるための文字サイズ
+##
+## 基準図：
+## width = 14 inch
+## 18 / 16 / 11
+##
+## 今回：
+## width = 20 inch
+##
+## 20 / 14 = 1.4286
+## ---------------------------------------------------------
+
+font_species <- 26
+font_axis_title <- 23
+font_axis_text <- 16
+
+font_legend_title <- 23
+font_legend_text <- 16
 
 
 ## =========================================================
 ## 4) 種の五十音順
 ## =========================================================
 
-species_order <- c(
-  "イガイ類",
-  "クボガイ",
-  "コンブ類",
-  "ツノマタ類",
-  "テングサ類",
-  "ヒジキ",
-  "フクロフノリ",
-  "マツモ",
-  "マボヤ",
-  "ワカメ"
-)
+species_order <-
+  c(
+    "イガイ類",
+    "クボガイ",
+    "コンブ類",
+    "ツノマタ類",
+    "テングサ類",
+    "ヒジキ",
+    "フクロフノリ",
+    "マツモ",
+    "マボヤ",
+    "ワカメ"
+  )
 
 
 ## =========================================================
@@ -198,271 +244,309 @@ species_order <- c(
 ## 学習データ基準で標準化
 ## ---------------------------------------------------------
 
-scale_with_train <- function(
+scale_with_train <-
+  function(
     train_df,
     test_df,
     vars
-){
-  
-  mu <- sapply(
-    train_df[, vars, drop = FALSE],
-    mean,
-    na.rm = TRUE
-  )
-  
-  
-  sd <- sapply(
-    train_df[, vars, drop = FALSE],
-    sd,
-    na.rm = TRUE
-  )
-  
-  
-  sd[
-    sd == 0 |
-      is.na(sd)
-  ] <- 1
-  
-  
-  train_s <- train_df
-  test_s <- test_df
-  
-  
-  for(v in vars){
+  ){
     
-    train_s[[v]] <-
-      (train_df[[v]] - mu[[v]]) /
-      sd[[v]]
+    mu <-
+      sapply(
+        train_df[
+          ,
+          vars,
+          drop = FALSE
+        ],
+        mean,
+        na.rm = TRUE
+      )
+    
+    sd <-
+      sapply(
+        train_df[
+          ,
+          vars,
+          drop = FALSE
+        ],
+        sd,
+        na.rm = TRUE
+      )
+    
+    sd[
+      sd == 0 |
+        is.na(sd)
+    ] <- 1
     
     
-    test_s[[v]] <-
-      (test_df[[v]] - mu[[v]]) /
-      sd[[v]]
+    train_s <- train_df
+    test_s <- test_df
+    
+    
+    for(v in vars){
+      
+      train_s[[v]] <-
+        (
+          train_df[[v]] -
+            mu[[v]]
+        ) /
+        sd[[v]]
+      
+      test_s[[v]] <-
+        (
+          test_df[[v]] -
+            mu[[v]]
+        ) /
+        sd[[v]]
+    }
+    
+    
+    list(
+      train = train_s,
+      test = test_s
+    )
   }
-  
-  
-  list(
-    train = train_s,
-    test = test_s
-  )
-}
 
 
 ## ---------------------------------------------------------
 ## XGBoost + LOYO CV
 ## ---------------------------------------------------------
 
-fit_xgb_loyo <- function(
+fit_xgb_loyo <-
+  function(
     df_sp,
     pred_vars,
     params,
     nrounds_max = 2000,
     early_stopping_rounds = 30,
     seed = 1
-){
-  
-  set.seed(seed)
-  
-  
-  df_sp <- df_sp %>%
-    mutate(
-      year = as.integer(year)
-    ) %>%
-    drop_na(
-      any_of(
-        c(
-          "freq",
-          "shore",
-          "plot",
-          "year",
-          pred_vars
+  ){
+    
+    set.seed(
+      seed
+    )
+    
+    
+    df_sp <-
+      df_sp %>%
+      mutate(
+        year =
+          as.integer(
+            year
+          )
+      ) %>%
+      drop_na(
+        any_of(
+          c(
+            "freq",
+            "shore",
+            "plot",
+            "year",
+            pred_vars
+          )
         )
       )
-    )
-  
-  
-  years <- sort(
-    unique(
-      df_sp$year
-    )
-  )
-  
-  
-  best_iters <- c()
-  
-  
-  ## -------------------------------------------------------
-  ## LOYO
-  ## -------------------------------------------------------
-  
-  for(y in years){
     
-    tr <- df_sp %>%
-      filter(
-        year != y
+    
+    years <-
+      sort(
+        unique(
+          df_sp$year
+        )
       )
     
     
-    te <- df_sp %>%
-      filter(
-        year == y
-      )
+    best_iters <- c()
     
     
-    if(
-      nrow(te) < 1 ||
-      nrow(tr) < 30
-    ){
-      next
+    ## -------------------------------------------------------
+    ## LOYO
+    ## -------------------------------------------------------
+    
+    for(y in years){
+      
+      tr <-
+        df_sp %>%
+        filter(
+          year != y
+        )
+      
+      te <-
+        df_sp %>%
+        filter(
+          year == y
+        )
+      
+      
+      if(
+        nrow(te) < 1 ||
+        nrow(tr) < 30
+      ){
+        next
+      }
+      
+      
+      sc <-
+        scale_with_train(
+          tr,
+          te,
+          pred_vars
+        )
+      
+      
+      dtr <-
+        xgb.DMatrix(
+          as.matrix(
+            sc$train[
+              ,
+              pred_vars,
+              drop = FALSE
+            ]
+          ),
+          label =
+            sc$train$freq
+        )
+      
+      
+      dte <-
+        xgb.DMatrix(
+          as.matrix(
+            sc$test[
+              ,
+              pred_vars,
+              drop = FALSE
+            ]
+          ),
+          label =
+            sc$test$freq
+        )
+      
+      
+      m <-
+        xgb.train(
+          params = params,
+          data = dtr,
+          nrounds = nrounds_max,
+          watchlist =
+            list(
+              train = dtr,
+              eval = dte
+            ),
+          early_stopping_rounds =
+            early_stopping_rounds,
+          verbose = 0
+        )
+      
+      
+      best_iters <-
+        c(
+          best_iters,
+          m$best_iteration
+        )
     }
     
     
-    sc <- scale_with_train(
-      tr,
-      te,
-      pred_vars
-    )
+    ## -------------------------------------------------------
+    ## best iterationの中央値
+    ## -------------------------------------------------------
+    
+    best_n <-
+      if(
+        length(
+          best_iters
+        ) == 0
+      ){
+        200
+        
+      } else {
+        
+        as.integer(
+          median(
+            best_iters,
+            na.rm = TRUE
+          )
+        )
+      }
     
     
-    dtr <- xgb.DMatrix(
-      as.matrix(
-        sc$train[
+    ## -------------------------------------------------------
+    ## 全データで最終モデル
+    ## -------------------------------------------------------
+    
+    mu_full <-
+      sapply(
+        df_sp[
           ,
           pred_vars,
           drop = FALSE
-        ]
-      ),
-      label =
-        sc$train$freq
-    )
-    
-    
-    dte <- xgb.DMatrix(
-      as.matrix(
-        sc$test[
-          ,
-          pred_vars,
-          drop = FALSE
-        ]
-      ),
-      label =
-        sc$test$freq
-    )
-    
-    
-    m <- xgb.train(
-      params = params,
-      data = dtr,
-      nrounds = nrounds_max,
-      watchlist = list(
-        train = dtr,
-        eval = dte
-      ),
-      early_stopping_rounds =
-        early_stopping_rounds,
-      verbose = 0
-    )
-    
-    
-    best_iters <- c(
-      best_iters,
-      m$best_iteration
-    )
-  }
-  
-  
-  ## -------------------------------------------------------
-  ## best iterationの中央値
-  ## -------------------------------------------------------
-  
-  best_n <- if(
-    length(best_iters) == 0
-  ){
-    
-    200
-    
-  } else {
-    
-    as.integer(
-      median(
-        best_iters,
+        ],
+        mean,
         na.rm = TRUE
       )
+    
+    
+    sd_full <-
+      sapply(
+        df_sp[
+          ,
+          pred_vars,
+          drop = FALSE
+        ],
+        sd,
+        na.rm = TRUE
+      )
+    
+    
+    sd_full[
+      sd_full == 0 |
+        is.na(sd_full)
+    ] <- 1
+    
+    
+    df_scaled <- df_sp
+    
+    
+    for(v in pred_vars){
+      
+      df_scaled[[v]] <-
+        (
+          df_sp[[v]] -
+            mu_full[[v]]
+        ) /
+        sd_full[[v]]
+    }
+    
+    
+    dfull <-
+      xgb.DMatrix(
+        as.matrix(
+          df_scaled[
+            ,
+            pred_vars,
+            drop = FALSE
+          ]
+        ),
+        label =
+          df_scaled$freq
+      )
+    
+    
+    model <-
+      xgb.train(
+        params = params,
+        data = dfull,
+        nrounds = best_n,
+        verbose = 0
+      )
+    
+    
+    list(
+      model = model,
+      best_nrounds = best_n,
+      df_raw = df_sp,
+      df_scaled = df_scaled
     )
   }
-  
-  
-  ## -------------------------------------------------------
-  ## 全データで最終モデル
-  ## -------------------------------------------------------
-  
-  mu_full <- sapply(
-    df_sp[
-      ,
-      pred_vars,
-      drop = FALSE
-    ],
-    mean,
-    na.rm = TRUE
-  )
-  
-  
-  sd_full <- sapply(
-    df_sp[
-      ,
-      pred_vars,
-      drop = FALSE
-    ],
-    sd,
-    na.rm = TRUE
-  )
-  
-  
-  sd_full[
-    sd_full == 0 |
-      is.na(sd_full)
-  ] <- 1
-  
-  
-  df_scaled <- df_sp
-  
-  
-  for(v in pred_vars){
-    
-    df_scaled[[v]] <-
-      (df_sp[[v]] - mu_full[[v]]) /
-      sd_full[[v]]
-  }
-  
-  
-  dfull <- xgb.DMatrix(
-    as.matrix(
-      df_scaled[
-        ,
-        pred_vars,
-        drop = FALSE
-      ]
-    ),
-    label =
-      df_scaled$freq
-  )
-  
-  
-  model <- xgb.train(
-    params = params,
-    data = dfull,
-    nrounds = best_n,
-    verbose = 0
-  )
-  
-  
-  list(
-    model = model,
-    best_nrounds = best_n,
-    df_raw = df_sp,
-    df_scaled = df_scaled
-  )
-}
 
 
 ## ---------------------------------------------------------
@@ -471,203 +555,220 @@ fit_xgb_loyo <- function(
 ## env_score = prediction - bias
 ## ---------------------------------------------------------
 
-compute_env_score_interactions <- function(
+compute_env_score_interactions <-
+  function(
     model,
     X_scaled
-){
-  
-  p <- ncol(
-    X_scaled
-  )
-  
-  n <- nrow(
-    X_scaled
-  )
-  
-  
-  pi_raw <- predict(
-    model,
-    X_scaled,
-    predinteraction = TRUE
-  )
-  
-  
-  p1 <- p + 1
-  
-  
-  pi_arr <- array(
-    pi_raw,
-    dim = c(
-      n,
-      p1,
-      p1
+  ){
+    
+    p <-
+      ncol(
+        X_scaled
+      )
+    
+    n <-
+      nrow(
+        X_scaled
+      )
+    
+    
+    pi_raw <-
+      predict(
+        model,
+        X_scaled,
+        predinteraction = TRUE
+      )
+    
+    
+    p1 <-
+      p + 1
+    
+    
+    pi_arr <-
+      array(
+        pi_raw,
+        dim =
+          c(
+            n,
+            p1,
+            p1
+          )
+      )
+    
+    
+    bias <-
+      pi_arr[
+        ,
+        p1,
+        p1
+      ]
+    
+    
+    pred <-
+      predict(
+        model,
+        X_scaled
+      )
+    
+    
+    tibble(
+      env_score =
+        pred - bias,
+      pred = pred,
+      bias = bias
     )
-  )
-  
-  
-  bias <- pi_arr[
-    ,
-    p1,
-    p1
-  ]
-  
-  
-  pred <- predict(
-    model,
-    X_scaled
-  )
-  
-  
-  tibble(
-    env_score =
-      pred - bias,
-    pred = pred,
-    bias = bias
-  )
-}
+  }
 
 
 ## ---------------------------------------------------------
 ## plot-level data
 ## ---------------------------------------------------------
 
-build_df_plot <- function(
+build_df_plot <-
+  function(
     fit,
     pred_vars
-){
-  
-  X_scaled <- as.matrix(
-    fit$df_scaled[
-      ,
-      pred_vars,
-      drop = FALSE
-    ]
-  )
-  
-  
-  add <- compute_env_score_interactions(
-    fit$model,
-    X_scaled
-  )
-  
-  
-  fit$df_raw %>%
-    select(
-      plot,
-      shore,
-      year,
-      species,
-      freq,
-      all_of(
-        pred_vars
+  ){
+    
+    X_scaled <-
+      as.matrix(
+        fit$df_scaled[
+          ,
+          pred_vars,
+          drop = FALSE
+        ]
       )
-    ) %>%
-    bind_cols(
-      add
-    ) %>%
-    mutate(
-      year =
-        as.integer(year),
-      
-      ## 種ごとの調査期間平均からの偏差
-      freq_centered =
-        freq -
-        mean(
-          freq,
-          na.rm = TRUE
+    
+    
+    add <-
+      compute_env_score_interactions(
+        fit$model,
+        X_scaled
+      )
+    
+    
+    fit$df_raw %>%
+      select(
+        plot,
+        shore,
+        year,
+        species,
+        freq,
+        all_of(
+          pred_vars
         )
-    )
-}
+      ) %>%
+      bind_cols(
+        add
+      ) %>%
+      mutate(
+        year =
+          as.integer(
+            year
+          ),
+        
+        ## 種ごとの調査期間平均からの偏差
+        freq_centered =
+          freq -
+          mean(
+            freq,
+            na.rm = TRUE
+          )
+      )
+  }
 
 
 ## ---------------------------------------------------------
 ## 年平均 ± SE
 ## ---------------------------------------------------------
 
-summarise_year_mean_se <- function(
+summarise_year_mean_se <-
+  function(
     df_plot
-){
-  
-  df_plot %>%
-    group_by(
-      year
-    ) %>%
-    summarise(
-      
-      ## x軸：資源水準
-      mean2 =
-        mean(
-          freq_centered,
-          na.rm = TRUE
-        ),
-      
-      sd2 =
-        sd(
-          freq_centered,
-          na.rm = TRUE
-        ),
-      
-      n2 =
-        sum(
-          is.finite(
-            freq_centered
-          )
-        ),
-      
-      se2 =
-        ifelse(
-          n2 > 1,
-          sd2 / sqrt(n2),
-          0
-        ),
-      
-      
-      ## y軸：環境影響
-      mean =
-        mean(
-          env_score,
-          na.rm = TRUE
-        ),
-      
-      sd1 =
-        sd(
-          env_score,
-          na.rm = TRUE
-        ),
-      
-      n1 =
-        sum(
-          is.finite(
-            env_score
-          )
-        ),
-      
-      se =
-        ifelse(
-          n1 > 1,
-          sd1 / sqrt(n1),
-          0
-        ),
-      
-      n =
-        pmin(
-          n1,
-          n2
-        ),
-      
-      .groups = "drop"
-    ) %>%
-    arrange(
-      year
-    )
-}
+  ){
+    
+    df_plot %>%
+      group_by(
+        year
+      ) %>%
+      summarise(
+        
+        ## x軸：資源水準
+        mean2 =
+          mean(
+            freq_centered,
+            na.rm = TRUE
+          ),
+        
+        sd2 =
+          sd(
+            freq_centered,
+            na.rm = TRUE
+          ),
+        
+        n2 =
+          sum(
+            is.finite(
+              freq_centered
+            )
+          ),
+        
+        se2 =
+          ifelse(
+            n2 > 1,
+            sd2 / sqrt(n2),
+            0
+          ),
+        
+        
+        ## y軸：環境影響
+        mean =
+          mean(
+            env_score,
+            na.rm = TRUE
+          ),
+        
+        sd1 =
+          sd(
+            env_score,
+            na.rm = TRUE
+          ),
+        
+        n1 =
+          sum(
+            is.finite(
+              env_score
+            )
+          ),
+        
+        se =
+          ifelse(
+            n1 > 1,
+            sd1 / sqrt(n1),
+            0
+          ),
+        
+        n =
+          pmin(
+            n1,
+            n2
+          ),
+        
+        .groups = "drop"
+      ) %>%
+      arrange(
+        year
+      )
+  }
 
 
 ## =========================================================
 ## 6) 図1作成関数
+## 原稿では図4（三陸プロット）
 ## =========================================================
 
-plot_sanriku_yearmean_cross <- function(
+plot_sanriku_yearmean_cross <-
+  function(
     df_year,
     title = NULL,
     expand_x = 0.50,
@@ -675,485 +776,480 @@ plot_sanriku_yearmean_cross <- function(
     inner_margin_x = 0.02,
     inner_margin_y = 0.02,
     combined = FALSE
-){
-  
-  ## -------------------------------------------------------
-  ## 最新5年
-  ## -------------------------------------------------------
-  
-  latest_year <- max(
-    df_year$year,
-    na.rm = TRUE
-  )
-  
-  
-  df_year <- df_year %>%
-    mutate(
-      is_recent5 =
-        year >=
-        (
-          latest_year - 4
-        )
-    )
-  
-  
-  ## -------------------------------------------------------
-  ## 軸範囲
-  ## -------------------------------------------------------
-  
-  x_rng <- range(
-    df_year$mean2,
-    na.rm = TRUE
-  )
-  
-  
-  y_rng <- range(
-    df_year$mean,
-    na.rm = TRUE
-  )
-  
-  
-  x_pad <-
-    diff(x_rng) *
-    expand_x
-  
-  
-  y_pad <-
-    diff(y_rng) *
-    expand_y
-  
-  
-  if(
-    !is.finite(x_pad) ||
-    x_pad == 0
   ){
-    x_pad <- 0.05
-  }
-  
-  
-  if(
-    !is.finite(y_pad) ||
-    y_pad == 0
-  ){
-    y_pad <- 0.05
-  }
-  
-  
-  x_min <-
-    x_rng[1] -
-    x_pad
-  
-  x_max <-
-    x_rng[2] +
-    x_pad
-  
-  
-  y_min <-
-    y_rng[1] -
-    y_pad
-  
-  y_max <-
-    y_rng[2] +
-    y_pad
-  
-  
-  ## -------------------------------------------------------
-  ## SEを図内に収める
-  ## -------------------------------------------------------
-  
-  x_in_pad <-
-    (
-      x_max -
-        x_min
-    ) *
-    inner_margin_x
-  
-  
-  y_in_pad <-
-    (
-      y_max -
-        y_min
-    ) *
-    inner_margin_y
-  
-  
-  x_min_in <-
-    x_min +
-    x_in_pad
-  
-  
-  x_max_in <-
-    x_max -
-    x_in_pad
-  
-  
-  y_min_in <-
-    y_min +
-    y_in_pad
-  
-  
-  y_max_in <-
-    y_max -
-    y_in_pad
-  
-  
-  df_plot <- df_year %>%
-    mutate(
-      
-      xmin_clip =
-        pmax(
-          mean2 - se2,
-          x_min_in
-        ),
-      
-      xmax_clip =
-        pmin(
-          mean2 + se2,
-          x_max_in
-        ),
-      
-      ymin_clip =
-        pmax(
-          mean - se,
-          y_min_in
-        ),
-      
-      ymax_clip =
-        pmin(
-          mean + se,
-          y_max_in
-        )
-    )
-  
-  
-  ## -------------------------------------------------------
-  ## サイズ
-  ## -------------------------------------------------------
-  
-  point_size_normal <-
-    ifelse(
-      combined,
-      1.8,
-      3
-    )
-  
-  
-  point_size_recent <-
-    ifelse(
-      combined,
-      3.2,
-      5
-    )
-  
-  
-  cross_width <-
-    ifelse(
-      combined,
-      0.35,
-      0.6
-    )
-  
-  
-  path_width <-
-    ifelse(
-      combined,
-      0.4,
-      0.5
-    )
-  
-  
-  ## ★まとめ図でも年ラベルを大きめに
-  year_text_size <-
-    ifelse(
-      combined,
-      2.7,
-      3
-    )
-  
-  
-  ## =======================================================
-  ## Plot
-  ## =======================================================
-  
-  p <-
-    ggplot(
-      df_plot,
-      aes(
-        x = mean2,
-        y = mean
+    
+    ## -------------------------------------------------------
+    ## 最新5年
+    ## -------------------------------------------------------
+    
+    latest_year <-
+      max(
+        df_year$year,
+        na.rm = TRUE
       )
-    ) +
     
+    
+    df_year <-
+      df_year %>%
+      mutate(
+        is_recent5 =
+          year >=
+          (
+            latest_year - 4
+          )
+      )
+    
+    
+    ## -------------------------------------------------------
+    ## 軸範囲
+    ## -------------------------------------------------------
+    
+    x_rng <-
+      range(
+        df_year$mean2,
+        na.rm = TRUE
+      )
+    
+    y_rng <-
+      range(
+        df_year$mean,
+        na.rm = TRUE
+      )
+    
+    
+    x_pad <-
+      diff(
+        x_rng
+      ) *
+      expand_x
+    
+    y_pad <-
+      diff(
+        y_rng
+      ) *
+      expand_y
+    
+    
+    if(
+      !is.finite(x_pad) ||
+      x_pad == 0
+    ){
+      x_pad <- 0.05
+    }
+    
+    
+    if(
+      !is.finite(y_pad) ||
+      y_pad == 0
+    ){
+      y_pad <- 0.05
+    }
+    
+    
+    x_min <-
+      x_rng[1] -
+      x_pad
+    
+    x_max <-
+      x_rng[2] +
+      x_pad
+    
+    y_min <-
+      y_rng[1] -
+      y_pad
+    
+    y_max <-
+      y_rng[2] +
+      y_pad
+    
+    
+    ## -------------------------------------------------------
+    ## SEを図内に収める
+    ## -------------------------------------------------------
+    
+    x_in_pad <-
+      (
+        x_max -
+          x_min
+      ) *
+      inner_margin_x
+    
+    
+    y_in_pad <-
+      (
+        y_max -
+          y_min
+      ) *
+      inner_margin_y
+    
+    
+    x_min_in <-
+      x_min +
+      x_in_pad
+    
+    x_max_in <-
+      x_max -
+      x_in_pad
+    
+    y_min_in <-
+      y_min +
+      y_in_pad
+    
+    y_max_in <-
+      y_max -
+      y_in_pad
+    
+    
+    df_plot <-
+      df_year %>%
+      mutate(
+        
+        xmin_clip =
+          pmax(
+            mean2 - se2,
+            x_min_in
+          ),
+        
+        xmax_clip =
+          pmin(
+            mean2 + se2,
+            x_max_in
+          ),
+        
+        ymin_clip =
+          pmax(
+            mean - se,
+            y_min_in
+          ),
+        
+        ymax_clip =
+          pmin(
+            mean + se,
+            y_max_in
+          )
+      )
+    
+    
+    ## -------------------------------------------------------
+    ## 点・線サイズ
+    ## -------------------------------------------------------
+    
+    point_size_normal <-
+      ifelse(
+        combined,
+        2.2,
+        3
+      )
+    
+    
+    point_size_recent <-
+      ifelse(
+        combined,
+        3.8,
+        5
+      )
+    
+    
+    cross_width <-
+      ifelse(
+        combined,
+        0.4,
+        0.6
+      )
+    
+    
+    path_width <-
+      0.5
+    
+    
+    ## -------------------------------------------------------
+    ## 年ラベル
+    ##
+    ## ここはthemeのptサイズとは別単位。
+    ## 密集を避けるため3.0のまま。
+    ## -------------------------------------------------------
+    
+    year_text_size <-
+      3.0
+    
+    
+    ## =======================================================
+    ## Plot
+    ## =======================================================
+    
+    p <-
+      ggplot(
+        df_plot,
+        aes(
+          x = mean2,
+          y = mean
+        )
+      ) +
+      
+      
+      ## -----------------------------------------------------
+    ## 背景四象限
     ## -----------------------------------------------------
-  ## 背景四象限
-  ## -----------------------------------------------------
-  
-  geom_rect(
-    xmin = 0,
-    xmax = x_max,
-    ymin = y_min,
-    ymax = 0,
-    fill = "orange",
-    alpha = 0.06
-  ) +
-    
-    geom_rect(
-      xmin = x_min,
-      xmax = 0,
-      ymin = y_min,
-      ymax = 0,
-      fill = "red",
-      alpha = 0.06
-    ) +
-    
-    geom_rect(
-      xmin = x_min,
-      xmax = 0,
-      ymin = 0,
-      ymax = y_max,
-      fill = "yellow",
-      alpha = 0.06
-    ) +
     
     geom_rect(
       xmin = 0,
       xmax = x_max,
-      ymin = 0,
-      ymax = y_max,
-      fill = "green",
+      ymin = y_min,
+      ymax = 0,
+      fill = "orange",
       alpha = 0.06
     ) +
-    
+      
+      geom_rect(
+        xmin = x_min,
+        xmax = 0,
+        ymin = y_min,
+        ymax = 0,
+        fill = "red",
+        alpha = 0.06
+      ) +
+      
+      geom_rect(
+        xmin = x_min,
+        xmax = 0,
+        ymin = 0,
+        ymax = y_max,
+        fill = "yellow",
+        alpha = 0.06
+      ) +
+      
+      geom_rect(
+        xmin = 0,
+        xmax = x_max,
+        ymin = 0,
+        ymax = y_max,
+        fill = "green",
+        alpha = 0.06
+      ) +
+      
+      
+      ## -----------------------------------------------------
+    ## 0線
     ## -----------------------------------------------------
-  ## 0線
-  ## -----------------------------------------------------
-  
-  geom_hline(
-    yintercept = 0,
-    linewidth = 0.3
-  ) +
     
-    geom_vline(
-      xintercept = 0,
+    geom_hline(
+      yintercept = 0,
       linewidth = 0.3
     ) +
-    
+      
+      geom_vline(
+        xintercept = 0,
+        linewidth = 0.3
+      ) +
+      
+      
+      ## -----------------------------------------------------
+    ## SE
     ## -----------------------------------------------------
-  ## SE
-  ## -----------------------------------------------------
-  
-  geom_segment(
-    aes(
-      x = mean2,
-      xend = mean2,
-      y = ymin_clip,
-      yend = ymax_clip
-    ),
-    linewidth =
-      cross_width,
-    color = "black"
-  ) +
     
     geom_segment(
       aes(
-        x = xmin_clip,
-        xend = xmax_clip,
-        y = mean,
-        yend = mean
+        x = mean2,
+        xend = mean2,
+        y = ymin_clip,
+        yend = ymax_clip
       ),
-      linewidth =
-        cross_width,
+      linewidth = cross_width,
       color = "black"
     ) +
-    
+      
+      geom_segment(
+        aes(
+          x = xmin_clip,
+          xend = xmax_clip,
+          y = mean,
+          yend = mean
+        ),
+        linewidth = cross_width,
+        color = "black"
+      ) +
+      
+      
+      ## -----------------------------------------------------
+    ## 年軌跡
     ## -----------------------------------------------------
-  ## 年軌跡
-  ## -----------------------------------------------------
-  
-  geom_path(
-    alpha = 0.8,
-    linewidth =
-      path_width
-  ) +
     
-    ## 通常年
+    geom_path(
+      color = "black",
+      alpha = 0.8,
+      linewidth = path_width
+    ) +
+      
+      
+      ## -----------------------------------------------------
+    ## 通常年：白丸
+    ## -----------------------------------------------------
+    
     geom_point(
       data =
         df_plot %>%
         filter(
           !is_recent5
         ),
-      aes(
-        color = year
-      ),
-      size =
-        point_size_normal,
-      alpha = 0.9
+      shape = 21,
+      size = point_size_normal,
+      stroke = 0.6,
+      color = "black",
+      fill = "white"
     ) +
+      
+      
+      ## -----------------------------------------------------
+    ## 直近5年：黒丸
+    ## -----------------------------------------------------
     
-    ## 直近5年
     geom_point(
       data =
         df_plot %>%
         filter(
           is_recent5
         ),
+      shape = 21,
+      size = point_size_recent,
+      stroke = 0.6,
+      color = "black",
+      fill = "black"
+    ) +
+      
+      
+      ## -----------------------------------------------------
+    ## 全年ラベル
+    ## -----------------------------------------------------
+    
+    ggrepel::geom_text_repel(
       aes(
-        color = year
+        label = year
       ),
-      shape = 18,
-      size =
-        point_size_recent
+      size = year_text_size,
+      family = jp_font,
+      color = "black",
+      segment.color = NA,
+      max.overlaps = Inf,
+      force = 1.5,
+      box.padding =
+        ifelse(
+          combined,
+          0.10,
+          0.25
+        ),
+      point.padding =
+        ifelse(
+          combined,
+          0.05,
+          0.15
+        ),
+      seed = 1
     ) +
-    
+      
+      
+      ## -----------------------------------------------------
+    ## 描画範囲
     ## -----------------------------------------------------
-  ## ★全年ラベル
-  ## -----------------------------------------------------
-  
-  ggrepel::geom_text_repel(
-    aes(
-      label = year
-    ),
-    size =
-      year_text_size,
-    family =
-      jp_font,
-    color = "black",
-    segment.color = NA,
-    max.overlaps = Inf,
-    force = 1.5,
-    box.padding =
-      ifelse(
-        combined,
-        0.10,
-        0.25
-      ),
-    point.padding =
-      ifelse(
-        combined,
-        0.05,
-        0.15
-      ),
-    seed = 1
-  ) +
     
-    ## -----------------------------------------------------
-  ## 年の濃淡
-  ## -----------------------------------------------------
-  
-  scale_color_gradient(
-    low = "white",
-    high = "black"
-  ) +
-    
-    ## -----------------------------------------------------
-  ## 描画範囲
-  ## -----------------------------------------------------
-  
-  coord_cartesian(
-    xlim = c(
-      x_min,
-      x_max
-    ),
-    ylim = c(
-      y_min,
-      y_max
-    ),
-    clip = "off"
-  ) +
-    
-    ## -----------------------------------------------------
-  ## 軸・凡例
-  ## -----------------------------------------------------
-  
-  labs(
-    x =
-      "資源水準（0は調査期間の平均値）",
-    y =
-      "海洋環境からの影響",
-    color =
-      "年",
-    title =
-      title
-  ) +
-    
-    theme_bw(
-      base_family =
-        jp_font
+    coord_cartesian(
+      xlim =
+        c(
+          x_min,
+          x_max
+        ),
+      ylim =
+        c(
+          y_min,
+          y_max
+        ),
+      clip = "off"
     ) +
+      
+      
+      ## -----------------------------------------------------
+    ## 軸
+    ## -----------------------------------------------------
     
-    theme(
+    labs(
+      x =
+        "資源水準（0は調査期間の平均値）",
+      y =
+        "海洋環境からの影響",
+      title =
+        title
+    ) +
       
-      ## ★種名
-      plot.title =
-        element_text(
-          size =
-            ifelse(
-              combined,
-              18,
-              18
-            ),
-          hjust = 0.5
-        ),
       
-      ## ★x/y軸タイトル
-      axis.title =
-        element_text(
-          size =
-            ifelse(
-              combined,
-              16,
-              14
-            )
-        ),
+      theme_bw(
+        base_family =
+          jp_font
+      ) +
       
-      ## ★軸目盛り
-      axis.text =
-        element_text(
-          size =
-            ifelse(
-              combined,
-              11,
-              11
-            )
-        ),
       
-      ## ★凡例タイトル
-      legend.title =
-        element_text(
-          size =
-            ifelse(
-              combined,
-              18,
-              11
-            )
-        ),
-      
-      ## ★凡例文字
-      legend.text =
-        element_text(
-          size =
-            ifelse(
-              combined,
-              16,
-              10
-            )
-        ),
-      
-      plot.margin =
-        margin(
-          7,
-          7,
-          7,
-          7
-        )
+      theme(
+        
+        ## -----------------------------------------
+        ## 種名
+        ## -----------------------------------------
+        
+        plot.title =
+          element_text(
+            size = font_species,
+            hjust = 0.5
+          ),
+        
+        ## -----------------------------------------
+        ## パネル枠
+        ## -----------------------------------------
+        
+        panel.border =
+          element_rect(
+            linewidth = 0.5
+          ),
+        
+        ## -----------------------------------------
+        ## x・y軸タイトル
+        ## -----------------------------------------
+        
+        axis.title =
+          element_text(
+            size = font_axis_title
+          ),
+        
+        ## -----------------------------------------
+        ## 軸数値
+        ## -----------------------------------------
+        
+        axis.text =
+          element_text(
+            size = font_axis_text
+          ),
+        
+        ## -----------------------------------------
+        ## 凡例なし
+        ## -----------------------------------------
+        
+        legend.position =
+          "none",
+        
+        ## -----------------------------------------
+        ## 外側余白
+        ## -----------------------------------------
+        
+        plot.margin =
+          margin(
+            7,
+            7,
+            7,
+            7
+          )
+      )
+    
+    
+    return(
+      p
     )
-  
-  
-  return(
-    p
-  )
-}
+  }
 
 
 ## =========================================================
@@ -1192,8 +1288,9 @@ for(sp in species_list){
   
   
   if(
-    nrow(df_sp) <
-    100
+    nrow(
+      df_sp
+    ) < 100
   ){
     
     message(
@@ -1205,22 +1302,24 @@ for(sp in species_list){
   }
   
   
-  fit <- fit_xgb_loyo(
-    df_sp,
-    pred_vars,
-    xgb_params,
-    nrounds_max =
-      nrounds_max,
-    early_stopping_rounds =
-      early_stopping_rounds,
-    seed = 1
-  )
+  fit <-
+    fit_xgb_loyo(
+      df_sp,
+      pred_vars,
+      xgb_params,
+      nrounds_max =
+        nrounds_max,
+      early_stopping_rounds =
+        early_stopping_rounds,
+      seed = 1
+    )
   
   
-  df_plot <- build_df_plot(
-    fit,
-    pred_vars
-  )
+  df_plot <-
+    build_df_plot(
+      fit,
+      pred_vars
+    )
   
   
   df_year <-
@@ -1264,21 +1363,25 @@ for(sp in names(plots)){
   )
   
   
-  p <- plots[[sp]]
+  p <-
+    plots[[sp]]
   
   
   if(
-    is.null(p)
+    is.null(
+      p
+    )
   ){
     next
   }
   
   
-  sp_safe <- gsub(
-    "[^[:alnum:]一-龥ぁ-んァ-ン]",
-    "_",
-    sp
-  )
+  sp_safe <-
+    gsub(
+      "[^[:alnum:]一-龥ぁ-んァ-ン]",
+      "_",
+      sp
+    )
   
   
   ggsave(
@@ -1303,7 +1406,7 @@ for(sp in names(plots)){
 
 
 ## =========================================================
-## 9) 図1：10種まとめ（5列×2行）
+## 9) 図1：10種まとめ（4列×3行）
 ## =========================================================
 
 plots_combined <- list()
@@ -1354,16 +1457,14 @@ plots_combined_ordered <-
 fig1_all <-
   patchwork::wrap_plots(
     plots_combined_ordered,
-    ncol = 5,
-    nrow = 2
+    ncol = 4,
+    nrow = 3
   ) +
   patchwork::plot_layout(
-    guides = "collect",
     axis_titles = "collect"
   ) &
   theme(
-    legend.position =
-      "right"
+    legend.position = "none"
   )
 
 
@@ -1376,12 +1477,12 @@ ggsave(
   filename =
     file.path(
       fig1_dir,
-      "図1_三陸プロット_10種_5列2行.png"
+      "図1_三陸プロット_10種_4列3行.png"
     ),
   plot =
     fig1_all,
   width = 20,
-  height = 9,
+  height = 13.5,
   units = "in",
   dpi = 300,
   device =
@@ -1414,10 +1515,11 @@ df_recent5_all <-
       }
       
       
-      latest_year <- max(
-        df$year,
-        na.rm = TRUE
-      )
+      latest_year <-
+        max(
+          df$year,
+          na.rm = TRUE
+        )
       
       
       df_recent <-
@@ -1438,57 +1540,59 @@ df_recent5_all <-
       
       
       ## x軸
-      mean_x <- mean(
-        df_recent$mean2,
-        na.rm = TRUE
-      )
-      
-      
-      sd_x <- sd(
-        df_recent$mean2,
-        na.rm = TRUE
-      )
-      
-      
-      n_x <- sum(
-        is.finite(
-          df_recent$mean2
+      mean_x <-
+        mean(
+          df_recent$mean2,
+          na.rm = TRUE
         )
-      )
       
+      sd_x <-
+        sd(
+          df_recent$mean2,
+          na.rm = TRUE
+        )
       
-      se_x <- ifelse(
-        n_x > 1,
-        sd_x / sqrt(n_x),
-        0
-      )
+      n_x <-
+        sum(
+          is.finite(
+            df_recent$mean2
+          )
+        )
+      
+      se_x <-
+        ifelse(
+          n_x > 1,
+          sd_x / sqrt(n_x),
+          0
+        )
       
       
       ## y軸
-      mean_y <- mean(
-        df_recent$mean,
-        na.rm = TRUE
-      )
-      
-      
-      sd_y <- sd(
-        df_recent$mean,
-        na.rm = TRUE
-      )
-      
-      
-      n_y <- sum(
-        is.finite(
-          df_recent$mean
+      mean_y <-
+        mean(
+          df_recent$mean,
+          na.rm = TRUE
         )
-      )
       
+      sd_y <-
+        sd(
+          df_recent$mean,
+          na.rm = TRUE
+        )
       
-      se_y <- ifelse(
-        n_y > 1,
-        sd_y / sqrt(n_y),
-        0
-      )
+      n_y <-
+        sum(
+          is.finite(
+            df_recent$mean
+          )
+        )
+      
+      se_y <-
+        ifelse(
+          n_y > 1,
+          sd_y / sqrt(n_y),
+          0
+        )
       
       
       tibble(
@@ -1521,25 +1625,29 @@ df_recent5_all <-
 ## 図2の軸範囲
 ## ---------------------------------------------------------
 
-x_rng <- range(
-  df_recent5_all$mean_x,
-  na.rm = TRUE
-)
+x_rng <-
+  range(
+    df_recent5_all$mean_x,
+    na.rm = TRUE
+  )
 
-
-y_rng <- range(
-  df_recent5_all$mean_y,
-  na.rm = TRUE
-)
+y_rng <-
+  range(
+    df_recent5_all$mean_y,
+    na.rm = TRUE
+  )
 
 
 x_pad <-
-  diff(x_rng) *
+  diff(
+    x_rng
+  ) *
   0.4
 
-
 y_pad <-
-  diff(y_rng) *
+  diff(
+    y_rng
+  ) *
   0.4
 
 
@@ -1563,16 +1671,13 @@ x_min <-
   x_rng[1] -
   x_pad
 
-
 x_max <-
   x_rng[2] +
   x_pad
 
-
 y_min <-
   y_rng[1] -
   y_pad
-
 
 y_max <-
   y_rng[2] +
@@ -1648,8 +1753,7 @@ fig_summary <-
       label = species
     ),
     size = 5,
-    family =
-      jp_font,
+    family = jp_font,
     segment.color = NA,
     box.padding = 0.4,
     point.padding = 0.3,
@@ -1657,14 +1761,16 @@ fig_summary <-
   ) +
   
   coord_cartesian(
-    xlim = c(
-      x_min,
-      x_max
-    ),
-    ylim = c(
-      y_min,
-      y_max
-    )
+    xlim =
+      c(
+        x_min,
+        x_max
+      ),
+    ylim =
+      c(
+        y_min,
+        y_max
+      )
   ) +
   
   labs(
@@ -1723,37 +1829,43 @@ shap_yearly <- list()
 
 for(sp in names(fits)){
   
-  fit <- fits[[sp]]
+  fit <-
+    fits[[sp]]
   
   
-  X_scaled <- as.matrix(
-    fit$df_scaled[
-      ,
-      pred_vars,
-      drop = FALSE
-    ]
-  )
+  X_scaled <-
+    as.matrix(
+      fit$df_scaled[
+        ,
+        pred_vars,
+        drop = FALSE
+      ]
+    )
   
   
-  shap_vals <- predict(
-    fit$model,
-    X_scaled,
-    predcontrib = TRUE
-  )
+  shap_vals <-
+    predict(
+      fit$model,
+      X_scaled,
+      predcontrib = TRUE
+    )
   
   
-  shap_df <- as.data.frame(
-    shap_vals
-  )
+  shap_df <-
+    as.data.frame(
+      shap_vals
+    )
   
   
   ## BIASを除外
-  shap_df <- shap_df[
-    ,
-    colnames(shap_df) !=
-      "BIAS",
-    drop = FALSE
-  ]
+  shap_df <-
+    shap_df[
+      ,
+      colnames(
+        shap_df
+      ) != "BIAS",
+      drop = FALSE
+    ]
   
   
   colnames(
@@ -1809,174 +1921,186 @@ for(sp in names(fits)){
 ## 12) 図3作成関数
 ## =========================================================
 
-plot_shap_stack <- function(
+plot_shap_stack <-
+  function(
     df_plot,
     title = NULL,
     combined = FALSE
-){
-  
-  yrs <- sort(
-    unique(
-      df_plot$year
-    )
-  )
-  
-  
-  ## 最初・中央・最後
-  year_breaks <- unique(
-    round(
-      seq(
-        min(yrs),
-        max(yrs),
-        length.out = 3
-      )
-    )
-  )
-  
-  
-  p <-
-    ggplot(
-      df_plot,
-      aes(
-        x = year,
-        y = direction,
-        fill = variable
-      )
-    ) +
+  ){
     
-    geom_col(
-      color = "black",
-      linewidth =
-        ifelse(
-          combined,
-          0.15,
-          0.3
+    yrs <-
+      sort(
+        unique(
+          df_plot$year
         )
-    ) +
-    
-    geom_hline(
-      yintercept = 0,
-      color = "black",
-      linewidth = 0.5
-    ) +
-    
-    scale_fill_manual(
-      values = c(
-        "m_sst" =
-          "gold",
-        "icumu_MHW" =
-          "tomato",
-        "icumu_MCS" =
-          "skyblue"
-      ),
-      breaks = c(
-        "m_sst",
-        "icumu_MHW",
-        "icumu_MCS"
-      ),
-      labels = c(
-        "m_sst" =
-          "平均水温",
-        "icumu_MHW" =
-          "海洋熱波",
-        "icumu_MCS" =
-          "海洋寒波"
       )
-    ) +
     
-    scale_x_continuous(
-      breaks =
-        year_breaks
-    ) +
     
-    labs(
-      x =
-        "年",
-      y =
-        "海洋環境からの影響（SHAP平均）",
-      fill =
-        "環境要因",
-      title =
-        title
-    ) +
+    ## -------------------------------------------------------
+    ## 最初・中央・最後
+    ## -------------------------------------------------------
     
-    theme_bw(
-      base_family =
-        jp_font
-    ) +
-    
-    theme(
-      
-      ## ★種名
-      plot.title =
-        element_text(
-          size =
-            ifelse(
-              combined,
-              18,
-              18
-            ),
-          hjust = 0.5
-        ),
-      
-      ## ★x/y軸タイトル
-      axis.title =
-        element_text(
-          size =
-            ifelse(
-              combined,
-              16,
-              14
-            )
-        ),
-      
-      ## ★軸の数値・年
-      axis.text =
-        element_text(
-          size =
-            ifelse(
-              combined,
-              11,
-              11
-            )
-        ),
-      
-      ## ★凡例タイトル
-      legend.title =
-        element_text(
-          size =
-            ifelse(
-              combined,
-              18,
-              11
-            )
-        ),
-      
-      ## ★凡例文字
-      legend.text =
-        element_text(
-          size =
-            ifelse(
-              combined,
-              16,
-              10
-            )
-        ),
-      
-      plot.margin =
-        margin(
-          7,
-          7,
-          7,
-          7
+    year_breaks <-
+      unique(
+        round(
+          seq(
+            min(yrs),
+            max(yrs),
+            length.out = 3
+          )
         )
+      )
+    
+    
+    p <-
+      ggplot(
+        df_plot,
+        aes(
+          x = year,
+          y = direction,
+          fill = variable
+        )
+      ) +
+      
+      geom_col(
+        color = "black",
+        linewidth =
+          ifelse(
+            combined,
+            0.15,
+            0.3
+          )
+      ) +
+      
+      geom_hline(
+        yintercept = 0,
+        color = "black",
+        linewidth = 0.5
+      ) +
+      
+      scale_fill_manual(
+        values =
+          c(
+            "m_sst" =
+              "gold",
+            "icumu_MHW" =
+              "tomato",
+            "icumu_MCS" =
+              "skyblue"
+          ),
+        breaks =
+          c(
+            "m_sst",
+            "icumu_MHW",
+            "icumu_MCS"
+          ),
+        labels =
+          c(
+            "m_sst" =
+              "平均水温",
+            "icumu_MHW" =
+              "海洋熱波",
+            "icumu_MCS" =
+              "海洋寒波"
+          )
+      ) +
+      
+      scale_x_continuous(
+        breaks =
+          year_breaks
+      ) +
+      
+      labs(
+        x =
+          "年",
+        y =
+          "海洋環境からの影響（SHAP平均）",
+        fill =
+          "環境要因",
+        title =
+          title
+      ) +
+      
+      theme_bw(
+        base_family =
+          jp_font
+      ) +
+      
+      theme(
+        
+        ## -----------------------------------------
+        ## 種名
+        ## -----------------------------------------
+        
+        plot.title =
+          element_text(
+            size = font_species,
+            hjust = 0.5
+          ),
+        
+        ## -----------------------------------------
+        ## パネル枠
+        ## -----------------------------------------
+        
+        panel.border =
+          element_rect(
+            linewidth = 0.5
+          ),
+        
+        ## -----------------------------------------
+        ## x・y軸タイトル
+        ## -----------------------------------------
+        
+        axis.title =
+          element_text(
+            size = font_axis_title
+          ),
+        
+        ## -----------------------------------------
+        ## 軸数値・年
+        ## -----------------------------------------
+        
+        axis.text =
+          element_text(
+            size = font_axis_text
+          ),
+        
+        ## -----------------------------------------
+        ## 凡例タイトル
+        ## -----------------------------------------
+        
+        legend.title =
+          element_text(
+            size = font_legend_title
+          ),
+        
+        ## -----------------------------------------
+        ## 凡例文字
+        ## -----------------------------------------
+        
+        legend.text =
+          element_text(
+            size = font_legend_text
+          ),
+        
+        ## -----------------------------------------
+        ## 外側余白
+        ## -----------------------------------------
+        
+        plot.margin =
+          margin(
+            7,
+            7,
+            7,
+            7
+          )
+      )
+    
+    
+    return(
+      p
     )
-  
-  
-  return(
-    p
-  )
-}
+  }
 
 
 ## =========================================================
@@ -2009,7 +2133,9 @@ for(sp in species_order){
   
   
   if(
-    is.null(df_plot) ||
+    is.null(
+      df_plot
+    ) ||
     nrow(df_plot) == 0
   ){
     next
@@ -2033,11 +2159,12 @@ for(sp in species_order){
   )
   
   
-  sp_safe <- gsub(
-    "[^[:alnum:]一-龥ぁ-んァ-ン]",
-    "_",
-    sp
-  )
+  sp_safe <-
+    gsub(
+      "[^[:alnum:]一-龥ぁ-んァ-ン]",
+      "_",
+      sp
+    )
   
   
   ggsave(
@@ -2259,6 +2386,7 @@ write.csv(
 ## =========================================================
 
 message("")
+
 message(
   "=============================================="
 )
