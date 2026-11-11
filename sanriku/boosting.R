@@ -1406,27 +1406,19 @@ for(sp in names(plots)){
 
 
 ## =========================================================
-## 9) 図1：10種まとめ（4列×3行）
+## 9) 図1：10種まとめ
+##    4列×3行 と 5列×2行 の両方を作成
 ## =========================================================
 
 plots_combined <- list()
 
-
 for(sp in species_order){
   
-  if(
-    !sp %in%
-    names(
-      sanriku_yearmean
-    )
-  ){
+  if(!sp %in% names(sanriku_yearmean)){
     next
   }
   
-  
-  df_year <-
-    sanriku_yearmean[[sp]]
-  
+  df_year <- sanriku_yearmean[[sp]]
   
   plots_combined[[sp]] <-
     plot_sanriku_yearmean_cross(
@@ -1434,27 +1426,30 @@ for(sp in species_order){
       title = sp,
       expand_x = expand_x,
       expand_y = expand_y,
-      inner_margin_x =
-        inner_margin_x,
-      inner_margin_y =
-        inner_margin_y,
+      inner_margin_x = inner_margin_x,
+      inner_margin_y = inner_margin_y,
       combined = TRUE
     )
 }
 
 
+## ---------------------------------------------------------
+## 五十音順に並べる
+## ---------------------------------------------------------
+
 plots_combined_ordered <-
   plots_combined[
     species_order[
-      species_order %in%
-        names(
-          plots_combined
-        )
+      species_order %in% names(plots_combined)
     ]
   ]
 
 
-fig1_all <-
+## =========================================================
+## 9-1) 4列×3行
+## =========================================================
+
+fig1_all_4x3 <-
   patchwork::wrap_plots(
     plots_combined_ordered,
     ncol = 4,
@@ -1467,27 +1462,60 @@ fig1_all <-
     legend.position = "none"
   )
 
-
-print(
-  fig1_all
-)
-
+print(fig1_all_4x3)
 
 ggsave(
-  filename =
-    file.path(
-      fig1_dir,
-      "図1_三陸プロット_10種_4列3行.png"
-    ),
-  plot =
-    fig1_all,
+  filename = file.path(
+    fig1_dir,
+    "図1_三陸プロット_10種_4列3行.png"
+  ),
+  plot = fig1_all_4x3,
   width = 20,
   height = 13.5,
   units = "in",
   dpi = 300,
-  device =
-    ragg::agg_png
+  device = ragg::agg_png
 )
+
+
+## =========================================================
+## 9-2) 5列×2行
+## =========================================================
+
+fig1_all_5x2 <-
+  patchwork::wrap_plots(
+    plots_combined_ordered,
+    ncol = 5,
+    nrow = 2
+  ) +
+  patchwork::plot_layout(
+    axis_titles = "collect"
+  ) &
+  theme(
+    legend.position = "none"
+  )
+
+print(fig1_all_5x2)
+
+ggsave(
+  filename = file.path(
+    fig1_dir,
+    "図1_三陸プロット_10種_5列2行.png"
+  ),
+  plot = fig1_all_5x2,
+  width = 20,
+  height = 9,
+  units = "in",
+  dpi = 300,
+  device = ragg::agg_png
+)
+
+
+## ---------------------------------------------------------
+## 保存確認
+## ---------------------------------------------------------
+
+message("図1（4列×3行）と図1（5列×2行）を保存しました。")
 
 
 ## =========================================================
