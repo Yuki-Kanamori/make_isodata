@@ -1462,7 +1462,7 @@ fig1_all_4x3 <-
     legend.position = "none"
   )
 
-print(fig1_all_4x3)
+# print(fig1_all_4x3)
 
 ggsave(
   filename = file.path(
@@ -1495,7 +1495,7 @@ fig1_all_5x2 <-
     legend.position = "none"
   )
 
-print(fig1_all_5x2)
+# print(fig1_all_5x2)
 
 ggsave(
   filename = file.path(
@@ -2453,3 +2453,4 @@ print(
     recursive = TRUE
   )
 )
+
