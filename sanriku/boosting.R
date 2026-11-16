@@ -1479,12 +1479,27 @@ ggsave(
 
 
 ## =========================================================
-## 9-2) 5列×2行
+## 9-2) 5列×2行（フォントサイズのみ変更）
 ## =========================================================
+
+# 4列×3行の設定は変更しない
+# 5列×2行用に別のプロットを作成
+
+plots_combined_5x2 <- lapply(
+  plots_combined_ordered,
+  function(p) {
+    p +
+      theme(
+        plot.title = element_text(size = 18),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 11)
+      )
+  }
+)
 
 fig1_all_5x2 <-
   patchwork::wrap_plots(
-    plots_combined_ordered,
+    plots_combined_5x2,
     ncol = 5,
     nrow = 2
   ) +
@@ -1494,8 +1509,6 @@ fig1_all_5x2 <-
   theme(
     legend.position = "none"
   )
-
-# print(fig1_all_5x2)
 
 ggsave(
   filename = file.path(
